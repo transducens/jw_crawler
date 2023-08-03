@@ -13,17 +13,18 @@ class SiteMap:
                  url: str,
                  exclude: List[str] = None):
         self.map_url = url
-        self.urls = []
+        self.urls = {}
         self.parallel_documents = []
         response = requests.get(self.map_url)
         root = etree.fromstring(response.content)
         for sitemap in root:
             children = sitemap.getchildren()
-            self.urls.append(children[0].text)
+            self.urls[children[0].text] = False
         if exclude is not None:
             for ex in exclude:
-                self.urls = [url for url in self.urls if ex not in url]
+                self.urls = {url: False for url in self.urls.keys() if ex not in url}
 
+    @staticmethod
     def save_parallel_documents_to_disk(self, loc: str = None) -> None:
         d = {}
         for parallel_doc in self.parallel_documents:
@@ -33,12 +34,30 @@ class SiteMap:
         with open(loc, "w") as f:
             f.write(json.dumps(d))
 
+    @staticmethod
     def load_parallel_documents_from_disk(self, loc: str) -> None:
         with open(loc) as f:
-            self.parallel_documents = json.loads(f.read())
+            parallel_docs = json.loads(f.read())
+        self.parallel_documents = [ParallelDocument(
+            url=key,
+            langs=parallel_docs[key]["langs"],
+            main_lang=parallel_docs[key]["main_lang"]
+        ) for key in parallel_docs.keys()]
+
+    @staticmethod
+    def save_visited_urls_to_disk(self, loc: str = None) -> None:
+        if loc is None:
+            loc = "crawled_urls.json"
+        with open(loc, "w") as f:
+            f.write(json.dumps(self.urls))
+
+    @staticmethod
+    def load_visited_urls_from_disk(self, loc: str) -> None:
+        with open(loc) as f:
+            self.urls = json.loads(f.read())
 
     def get_parallel_documents(self, driver: webdriver):
-        for url in self.urls:
+        for url in self.urls.keys():
             driver.get(url)
             langs = []
             for language in LANGS:
@@ -61,3 +80,5 @@ class SiteMap:
                 ))
             else:
                 logging.debug(f"Parallel document at {url} does not contain Mayan languages")
+            self.urls[url] = True
+
