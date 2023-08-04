@@ -7,7 +7,7 @@ class ParallelDocument:
         self.url = url
         self.langs = langs
         self.main_lang = main_lang
-        self.df = None
+        self.df: pd.DataFrame = pd.DataFrame()
 
     def go_to_lang(self, lang: str, driver: webdriver) -> None:
         if driver.current_url != self.url:
@@ -41,9 +41,10 @@ class ParallelDocument:
 
         return parallel_text
 
-    def get_parallel_texts(self, driver):
-        text_dict = {}
-        for lang in self.langs:
-            text_dict[lang] = self.get_text_by_lang(lang, driver)
-        self.df = pd.DataFrame(text_dict)
+    def get_parallel_texts(self, driver) -> pd.DataFrame:
+        self.df = pd.DataFrame({lang: self.get_text_by_lang(lang, driver) for lang in self.langs})
+        return self.df
+
+    def save_dataframe(self) -> None:
+        self.df.to_csv(f"{self.url}.csv")
 
