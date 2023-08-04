@@ -1,7 +1,8 @@
 import logging
 import sys
 from time import sleep
-from typing import List
+from typing import List, Dict
+import pandas as pd
 from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
