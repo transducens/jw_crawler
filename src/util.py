@@ -11,6 +11,7 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
 LANGS = [
+    'es',
     'cak',
     'kek',
     'mam',
@@ -27,7 +28,7 @@ log_format = (
     '[%(asctime)s] %(levelname)-8s %(message)s')
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format=log_format,
     stream=sys.stdout
 )
