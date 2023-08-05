@@ -1,13 +1,16 @@
+import pandas as pd
+
 from src.util import *
 
 
 class ParallelDocument:
 
-    def __init__(self, url: str, langs: List[str], main_lang: str = "es"):
+    def __init__(self, url: str, langs: List[str], main_lang: str = "es", is_scraped: bool = False):
         self.url = url
         self.langs = langs
         self.main_lang = main_lang
         self.df: pd.DataFrame = pd.DataFrame()
+        self.is_scraped = is_scraped
 
     def go_to_lang(self, lang: str, driver: webdriver) -> None:
         if driver.current_url != self.url:
@@ -39,11 +42,15 @@ class ParallelDocument:
         for idx, q in enumerate(q_list):
             parallel_text.append(q.text)
 
-        return parallel_text
+        return [text for text in parallel_text if text != ""]
 
     def get_parallel_texts(self, driver) -> pd.DataFrame:
-        self.df = pd.DataFrame({lang: self.get_text_by_lang(lang, driver) for lang in self.langs})
-        return self.df
+        try:
+            self.df = pd.DataFrame({lang: self.get_text_by_lang(lang, driver) for lang in self.langs})
+            return self.df
+        except Exception:
+            logging.warning(f"Failed to scrape {self.url}")
+            return pd.DataFrame()
 
     def save_dataframe(self) -> None:
         self.df.to_csv(f"{self.url}.csv")

@@ -18,4 +18,4 @@ class SiteMap:
         if exclude is not None:
             for ex in exclude:
                 self.visited_urls = {url: False for url in self.visited_urls.keys() if ex not in url}
-        logging.info(f"Collected {len(self.visited_urls)} from site map")
+        logging.info(f"Collected {len(self.visited_urls)} urls from site map")
