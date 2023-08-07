@@ -1,3 +1,5 @@
+import logging
+
 from src.ParallelDocument import ParallelDocument
 from src.SiteMap import SiteMap
 from src.util import *
@@ -6,17 +8,17 @@ from src.util import *
 class Crawler:
     def __init__(self,
                  site_map: SiteMap,
-                 working_dir: str = "",
+                 working_dir: str,
                  ):
         self.site_map = site_map
         self.parallel_documents: List[ParallelDocument] = []
         self.working_dir = working_dir
 
-        options = webdriver.Options()
+        options = Options()
         options.add_argument("--headless")
         self.driver = webdriver.Firefox(options=options)
 
-    def save_parallel_documents_to_disk(self, loc: str = ".") -> None:
+    def save_parallel_documents_to_disk(self) -> None:
         d = {}
         for parallel_doc in self.parallel_documents:
             d[parallel_doc.url] = {
@@ -24,16 +26,20 @@ class Crawler:
                 "main_lang": parallel_doc.main_lang,
                 "is_scraped": parallel_doc.is_scraped
             }
-        if loc is not None:
-            os.mkdir(loc)
+        if not os.path.isdir(self.working_dir):
+            os.mkdir(self.working_dir)
 
-        with open(f"{loc}/parallel_documents.json", "w") as f:
+        with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
             f.write(json.dumps(d))
         logging.info(f"Saving new parallel documents to disk.")
 
-    def load_parallel_documents_from_disk(self, loc: str) -> None:
-        with open(f"{loc}/parallel_documents.json") as f:
-            parallel_docs = json.loads(f.read())
+    def load_parallel_documents_from_disk(self) -> None:
+        try:
+            with open(f"{self.working_dir}/parallel_documents.json") as f:
+                parallel_docs = json.loads(f.read())
+        except FileNotFoundError:
+            logging.warning(f"No parallel documents file found at {self.working_dir}/. Exiting.")
+            exit(1)
         self.parallel_documents = [
             ParallelDocument(
                 url=key,
@@ -44,19 +50,27 @@ class Crawler:
         ]
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
 
-    def save_visited_urls_to_disk(self, loc: str = None) -> None:
-        if loc is not None:
-            os.mkdir(loc)
-        with open(f"{loc}/visited_urls.json", "w") as f:
+    def save_visited_urls_to_disk(self) -> None:
+
+        if not os.path.isdir(self.working_dir):
+            os.mkdir(self.working_dir)
+
+        with open(f"{self.working_dir}/visited_urls.json", "w") as f:
             f.write(json.dumps(self.site_map.visited_urls))
         logging.info(
             f"Saved {len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key]])} "
             f"visited urls to disk"
         )
 
-    def load_visited_urls_from_disk(self, loc: str) -> None:
-        with open(f"{loc}/visited_urls.json") as f:
-            self.site_map.visited_urls = json.loads(f.read())
+    def load_visited_urls_from_disk(self) -> None:
+
+        try:
+            with open(f"{self.working_dir}/visited_urls.json") as f:
+                self.site_map.visited_urls = json.loads(f.read())
+        except FileNotFoundError:
+            logging.warning(f"No visited urls file found at {self.working_dir}/. Exiting.")
+            exit(1)
+
         logging.info(
             f"Loaded {len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key]])} "
             f"visited urls from file"
@@ -64,15 +78,15 @@ class Crawler:
 
     def gather_parallel_documents(self, driver: webdriver,
                                   save_interval: int,
-                                  visited_urls_file: str,
-                                  parallel_documents_file: str,
+                                  load_parallel_docs: bool,
+                                  load_visited_urls: bool,
                                   max_number: int):
 
-        if visited_urls_file is not None:
-            self.load_visited_urls_from_disk(visited_urls_file)
+        if load_visited_urls:
+            self.load_visited_urls_from_disk()
 
-        if parallel_documents_file is not None:
-            self.load_parallel_documents_from_disk(parallel_documents_file)
+        if load_parallel_docs:
+            self.load_parallel_documents_from_disk()
             if len(self.parallel_documents) >= max_number:
                 logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
 
@@ -105,7 +119,7 @@ class Crawler:
                     )
                 )
                 logging.info(f"Added parallel document at {url} containing {str(langs)}")
-                if max_number is not None and len(self.parallel_documents) >= max_number:
+                if max_number != 0 and len(self.parallel_documents) >= max_number:
                     logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
                     break
             else:
@@ -122,43 +136,51 @@ class Crawler:
         self.save_parallel_documents_to_disk()
 
     def collect_parallel_texts(self, driver: webdriver,
-                               loc: str,
-                               save_interval: int):
+                               save_interval: int,
+                               ):
 
-        if not os.path.isdir(loc):
-            os.mkdir(loc)
+        if not os.path.isdir(f"{self.working_dir}/dataframes/"):
+            logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
+            os.mkdir(f"{self.working_dir}/dataframes/")
 
+        self.load_parallel_documents_from_disk()
+
+        logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
             doc_name = parallel_document.url.split("/")
-            doc_name = [s for s in doc_name if s != '']
+            doc_name = [token for token in doc_name if token != '']
             doc_name = doc_name[-1]
             parallel_text_df = parallel_document.get_parallel_texts(driver)
-            parallel_text_df.to_csv(f"{loc}/{doc_name}", sep="\t")
+            parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
             logging.info(
-                f"Saved parallel text dataframe at {loc}/{doc_name} containing languages: {parallel_document.langs}."
+                f"Saved parallel text dataframe at {self.working_dir}/dataframes/{doc_name}.tsv containing languages: "
+                f"{parallel_document.langs}."
             )
             parallel_document.is_scraped = True
             if idx % save_interval == 0 and idx != 0:
                 n_docs_scraped = abs(len(parallel_documents_to_scrape) - idx)
                 logging.info(f"Scraped {n_docs_scraped} new parallel documents.")
                 self.save_parallel_documents_to_disk()
+        logging.info("Finishing scrape and saving.")
+        self.save_parallel_documents_to_disk()
 
     def crawl(self,
               parallel_documents_save_interval: int,
-              visited_urls_file_loc: str,
-              parallel_docs_file_loc: str,
+              load_parallel_docs: bool,
+              load_visited_urls: bool,
               max_number_parallel_docs: int,
-              parallel_corpus_dir_loc,
-              parallel_texts_save_interval: int):
+              ):
 
         self.gather_parallel_documents(driver=self.driver,
                                        save_interval=parallel_documents_save_interval,
-                                       parallel_documents_file=parallel_docs_file_loc,
-                                       visited_urls_file=visited_urls_file_loc,
+                                       load_parallel_docs=load_parallel_docs,
+                                       load_visited_urls=load_visited_urls,
                                        max_number=max_number_parallel_docs
                                        )
+
+    def scrape(self, parallel_texts_save_interval: int):
+
         self.collect_parallel_texts(driver=self.driver,
-                                    loc=parallel_corpus_dir_loc,
-                                    save_interval=parallel_texts_save_interval
+                                    save_interval=parallel_texts_save_interval,
                                     )
