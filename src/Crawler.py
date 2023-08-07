@@ -104,6 +104,7 @@ class Crawler:
         for idx, url in enumerate(urls_to_visit):
 
             driver.get(url)
+            logging.info(f"Crawling {url}")
             langs = []
             for language in LANGS:
                 try:
