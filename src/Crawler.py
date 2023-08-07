@@ -3,6 +3,7 @@ import logging
 from src.ParallelDocument import ParallelDocument
 from src.SiteMap import SiteMap
 from src.util import *
+from selenium.webdriver.firefox.service import Service
 
 
 class Crawler:
@@ -16,7 +17,10 @@ class Crawler:
 
         options = Options()
         options.add_argument("--headless")
-        self.driver = webdriver.Firefox(options=options)
+        options.add_argument("--no-sandbox")
+        geckodriver_path = "/snap/bin/geckodriver"
+        driver_service = Service(executable_path=geckodriver_path)
+        self.driver = webdriver.Firefox(options=options, service=driver_service)
 
     def save_parallel_documents_to_disk(self) -> None:
         d = {}
