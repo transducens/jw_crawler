@@ -8,15 +8,22 @@ parser = argparse.ArgumentParser(
     epilog="Inspired by the tireless efforts of the JW300 team"
 )
 
-parser.add_argument("-c", "--crawl", action='store_true', default=False)
-parser.add_argument("-s", "--scrape", action='store_true', default=False)
-parser.add_argument("--site_map_url", required=True)
-parser.add_argument("--working_dir", default=".")
-parser.add_argument("--load_parallel_docs", action='store_true')
-parser.add_argument("--load_visited_urls", action='store_true')
-parser.add_argument("--parallel_docs_save_interval", default=50, type=int)
-parser.add_argument("--parallel_texts_save_interval", default=50, type=int)
-parser.add_argument("--max_number_parallel_docs", default=0, type=int)
+parser.add_argument("-c", "--crawl", action='store_true', default=False, help="Runs crawl operation, which gathers "
+                                                                              "parallel documents from JW.org")
+parser.add_argument("-s", "--scrape", action='store_true', default=False, help="Runs scrape operation, which extracts"
+                                                                               "parallel text from parallel documents"
+                                                                               "and saves them as dataframes")
+parser.add_argument("--site_map_url", required=True, help="Sets URL of site map to be downloaded before beginning"
+                                                          "crawl operation")
+parser.add_argument("--working_dir", default=".", help="Sets working directory. Default is the same directory as "
+                                                       "script")
+parser.add_argument("--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.")
+parser.add_argument("--load_visited_urls", action='store_true', help="Loads saved list of visited urls")
+parser.add_argument("--parallel_docs_save_interval", default=50, type=int, help="Sets how often to save parallel docs")
+parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help="Sets how often to save parallel"
+                                                                                 "docs after being scraped")
+parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
+                                                                            "gather")
 parser.add_argument("--exclude", help="Pass a string containing tokens to exclude from site map separated by spaces")
 
 args = parser.parse_args()
