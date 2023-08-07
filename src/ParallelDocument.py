@@ -27,8 +27,7 @@ class ParallelDocument:
         except NoSuchElementException:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
 
-    def get_text_by_lang(self, lang: str, driver: webdriver) -> List[str]:
-        parallel_text = []
+    def get_text_by_lang(self, lang: str, driver: webdriver) -> pd.DataFrame:
         self.go_to_lang(lang, driver)
         p_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'p')))]")
         q_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'q')))]")
@@ -36,18 +35,24 @@ class ParallelDocument:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
             return []
 
-        for idx, p in enumerate(p_list):
-            parallel_text.append(p.text)
+        p_text = [p.text for p in p_list if p.text != ""]
+        p_indices = [f"p{x}" for x in range(1, len(p_text) + 1)]
+        p_df = {lang: p_text}
+        p_df = pd.DataFrame(p_df, index=p_indices)
 
-        for idx, q in enumerate(q_list):
-            parallel_text.append(q.text)
+        q_text = [q.text for q in q_list if q.text != ""]
+        q_indices = [f"q{x}" for x in range(1, len(q_text) + 1)]
+        q_df = {lang: q_text}
+        q_df = pd.DataFrame(q_df, index=q_indices)
 
-        return [text for text in parallel_text if text != ""]
+        return pd.concat([p_df, q_df], axis=0)
 
     def get_parallel_texts(self, driver) -> pd.DataFrame:
         try:
-            self.df = pd.DataFrame({lang: self.get_text_by_lang(lang, driver) for lang in self.langs})
+            dfs = [self.get_text_by_lang(lang=lang, driver=driver) for lang in self.langs]
+            self.df = pd.concat(dfs, axis=1)
             return self.df
+
         except Exception:
             logging.warning(f"Failed to scrape {self.url}")
             return pd.DataFrame()
