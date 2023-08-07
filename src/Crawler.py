@@ -10,6 +10,7 @@ class Crawler:
     def __init__(self,
                  site_map: SiteMap,
                  working_dir: str,
+                 snap: bool,
                  ):
         self.site_map = site_map
         self.parallel_documents: List[ParallelDocument] = []
@@ -17,10 +18,13 @@ class Crawler:
 
         options = Options()
         options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        geckodriver_path = "/snap/bin/geckodriver"
-        driver_service = Service(executable_path=geckodriver_path)
-        self.driver = webdriver.Firefox(options=options, service=driver_service)
+        if snap:
+            options.add_argument("--no-sandbox")
+            geckodriver_path = "/snap/bin/geckodriver"
+            driver_service = Service(executable_path=geckodriver_path)
+            self.driver = webdriver.Firefox(options=options, service=driver_service)
+        else:
+            self.driver = webdriver.Firefox(options=options)
 
     def save_parallel_documents_to_disk(self) -> None:
         d = {}

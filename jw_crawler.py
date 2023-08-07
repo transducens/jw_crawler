@@ -25,6 +25,7 @@ parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help
 parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
 parser.add_argument("--exclude", help="Pass a string containing tokens to exclude from site map separated by spaces")
+parser.add_argument("--snap", action='store_true', default=False, help="Use if using the Snap version of Firefox")
 
 args = parser.parse_args()
 
@@ -42,7 +43,8 @@ crawler = Crawler(
         exclude=args.exclude.split(" "),
         visited_urls=visited_urls if args.load_visited_urls else None
     ),
-    working_dir=args.working_dir
+    working_dir=args.working_dir,
+    snap=args.snap,
 )
 
 if args.crawl:
