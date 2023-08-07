@@ -3,14 +3,16 @@ import sys
 import json
 import requests
 import os
+import argparse
+import pandas as pd
 from time import sleep
 from typing import List, Dict
-import pandas as pd
 from lxml import etree
 from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox import webdriver
+from selenium.webdriver.firefox.options import Options
 from selenium import webdriver
 
 from selenium.common import NoSuchElementException
