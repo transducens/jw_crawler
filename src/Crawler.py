@@ -1,5 +1,3 @@
-import logging
-
 from src.ParallelDocument import ParallelDocument
 from src.SiteMap import SiteMap
 from src.util import *
@@ -11,10 +9,12 @@ class Crawler:
                  site_map: SiteMap,
                  working_dir: str,
                  snap: bool,
+                 langs: List[str]
                  ):
         self.site_map = site_map
         self.parallel_documents: List[ParallelDocument] = []
         self.working_dir = working_dir
+        self.langs = langs
 
         options = Options()
         options.add_argument("--headless")
@@ -53,7 +53,7 @@ class Crawler:
             with open(f"{self.working_dir}/parallel_documents.json") as f:
                 parallel_docs = json.loads(f.read())
         except FileNotFoundError:
-            logging.warning(f"No parallel documents file found at {self.working_dir}/. Exiting.")
+            logging.warning(f"No parallel documents file found in working directory. Exiting.")
             exit(1)
         self.parallel_documents = [
             ParallelDocument(
@@ -109,11 +109,11 @@ class Crawler:
         urls_to_visit = [url for url in urls_to_visit if self.site_map.visited_urls[url] is False]
 
         for idx, url in enumerate(urls_to_visit):
-
+            sleep(1)
             driver.get(url)
             logging.info(f"Crawling {url}")
             langs = []
-            for language in LANGS:
+            for language in self.langs:
                 try:
                     language_input = driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
                     language_input.clear()
@@ -134,7 +134,7 @@ class Crawler:
                         langs=langs
                     )
                 )
-                logging.info(f"Added parallel document at {url} containing {str(langs)}")
+                logging.info(f"Added parallel document at containing languages {str(langs)}")
                 if max_number != 0 and len(self.parallel_documents) >= max_number:
                     logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
                     break
@@ -160,13 +160,11 @@ class Crawler:
             os.mkdir(f"{self.working_dir}/dataframes/")
 
         self.load_parallel_documents_from_disk()
-
         logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
-            doc_name = parallel_document.url.split("/")
-            doc_name = [token for token in doc_name if token != '']
-            doc_name = doc_name[-1]
+            doc_name = parallel_document.url.split("org")[1]
+            doc_name = doc_name.replace("/", "_")
             parallel_text_df = parallel_document.get_parallel_texts(driver)
             parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
             logging.info(

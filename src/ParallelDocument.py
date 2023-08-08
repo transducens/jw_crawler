@@ -1,5 +1,3 @@
-import pandas as pd
-
 from src.util import *
 
 
@@ -33,7 +31,7 @@ class ParallelDocument:
         q_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'q')))]")
         if len(p_list) == 0 and len(q_list) == 0:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
-            return []
+            return pd.DataFrame()
 
         p_text = [p.text for p in p_list if p.text != ""]
         p_indices = [f"p{x}" for x in range(1, len(p_text) + 1)]
@@ -59,4 +57,3 @@ class ParallelDocument:
 
     def save_dataframe(self) -> None:
         self.df.to_csv(f"{self.url}.csv")
-

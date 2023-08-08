@@ -18,20 +18,6 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-LANGS = [
-    'es',
-    'cak',
-    'kek',
-    'mam',
-    'kjb',
-    'ctu',
-    'quc',
-    'poh',
-    'tzh',
-    'tzo',
-    'yua',
-]
-
 log_format = (
     '[%(asctime)s] %(levelname)-8s %(message)s')
 
