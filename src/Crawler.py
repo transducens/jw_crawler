@@ -37,9 +37,16 @@ class Crawler:
         if not os.path.isdir(self.working_dir):
             os.mkdir(self.working_dir)
 
+        if os.path.exists(f"{self.working_dir}/parallel_documents.json"):
+            with open(f"{self.working_dir}/parallel_documents.json") as f:
+                n_parallel_docs_on_disk = json.loads(f.read())
+                n_parallel_docs_on_disk = len(n_parallel_docs_on_disk)
+
+        n_new_parallel_docs = abs(len(self.parallel_documents) - n_parallel_docs_on_disk)
+
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
             f.write(json.dumps(d))
-        logging.info(f"Saving new parallel documents to disk.")
+        logging.info(f"Saving {n_new_parallel_docs} new parallel documents to disk.")
 
     def load_parallel_documents_from_disk(self) -> None:
         try:
@@ -66,7 +73,7 @@ class Crawler:
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
             f.write(json.dumps(self.site_map.visited_urls))
         logging.info(
-            f"Saved {len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key]])} "
+            f"Saving {len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key]])} "
             f"visited urls to disk"
         )
 
