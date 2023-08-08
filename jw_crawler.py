@@ -21,11 +21,11 @@ parser.add_argument("--load_parallel_docs", action='store_true', help="Loads sav
 parser.add_argument("--load_visited_urls", action='store_true', help="Loads saved list of visited urls")
 parser.add_argument("--parallel_docs_save_interval", default=50, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help="Sets how often to save parallel"
-                                                                                 "docs after being scraped")
+                                                                                 " docs after being scraped")
 parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
 parser.add_argument("--exclude", help="Pass a string containing tokens to exclude from site map separated by spaces")
-parser.add_argument("--snap", action='store_true', default=False, help="Use if using the Snap version of Firefox")
+parser.add_argument("--snap", action='store_true', default=False, help="Include if using the Snap version of Firefox")
 
 args = parser.parse_args()
 
