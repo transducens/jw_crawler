@@ -104,7 +104,6 @@ class Crawler:
         urls_to_visit = [url for url in urls_to_visit if self.site_map.visited_urls[url] is False]
 
         for idx, url in enumerate(urls_to_visit):
-            sleep(1)
             driver.get(url)
             logging.info(f"Crawling {url}")
             langs = []
