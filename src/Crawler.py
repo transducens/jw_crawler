@@ -15,16 +15,11 @@ class Crawler:
         self.parallel_documents: List[ParallelDocument] = []
         self.working_dir = working_dir
         self.langs = langs
+        self.snap = snap
 
         options = Options()
         options.add_argument("--headless")
-        if snap:
-            options.add_argument("--no-sandbox")
-            geckodriver_path = "/snap/bin/geckodriver"
-            driver_service = Service(executable_path=geckodriver_path)
-            self.driver = webdriver.Firefox(options=options, service=driver_service)
-        else:
-            self.driver = webdriver.Firefox(options=options)
+        self.driver = self.get_new_driver(snap=self.snap)
 
     def save_parallel_documents_to_disk(self) -> None:
         d = {}
@@ -146,6 +141,8 @@ class Crawler:
             if idx % save_interval == 0 and idx != 0:
                 self.save_parallel_documents_to_disk()
                 self.save_visited_urls_to_disk()
+                self.driver.quit()
+                self.driver = self.get_new_driver(self.snap)
 
         logging.info("Finishing crawl and saving.")
         self.save_visited_urls_to_disk()
@@ -198,3 +195,15 @@ class Crawler:
         self.collect_parallel_texts(driver=self.driver,
                                     save_interval=parallel_texts_save_interval,
                                     )
+
+    @staticmethod
+    def get_new_driver(snap: bool = False) -> webdriver.Firefox:
+        options = Options()
+        options.add_argument("--headless")
+        if snap:
+            options.add_argument("--no-sandbox")
+            geckodriver_path = "/snap/bin/geckodriver"
+            driver_service = Service(executable_path=geckodriver_path)
+            return webdriver.Firefox(options=options, service=driver_service)
+        return webdriver.Firefox(options=options)
+
