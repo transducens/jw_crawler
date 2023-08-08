@@ -95,7 +95,7 @@ class Crawler:
 
         if load_parallel_docs:
             self.load_parallel_documents_from_disk()
-            if len(self.parallel_documents) >= max_number:
+            if len(self.parallel_documents) >= max_number != 0:
                 logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
 
         urls_to_visit = list(self.site_map.visited_urls.keys())
