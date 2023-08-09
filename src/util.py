@@ -24,7 +24,7 @@ log_format = (
 logging.basicConfig(
     level=logging.INFO,
     format=log_format,
-    stream=sys.stdout
+    filename="jw_crawler.log"
 )
 
 

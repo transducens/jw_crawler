@@ -144,7 +144,6 @@ class Crawler:
                 self.save_parallel_documents_to_disk()
                 self.save_visited_urls_to_disk()
                 self.driver.delete_all_cookies()
-                self.driver = self.get_new_driver(self.snap)
 
         logging.info("Finishing crawl and saving.")
         self.save_visited_urls_to_disk()
