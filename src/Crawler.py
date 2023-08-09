@@ -44,7 +44,7 @@ class Crawler:
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
             f.write(json.dumps(d))
-        logging.info(f"Saving {n_new_parallel_docs} new parallel documents to disk.")
+        logging.info(f"Saving {n_new_parallel_docs} new parallel documents to disk, for a current total of {len(self.parallel_documents)} parallel documents.")
 
     def load_parallel_documents_from_disk(self) -> None:
         try:
