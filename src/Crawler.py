@@ -37,6 +37,9 @@ class Crawler:
                 n_parallel_docs_on_disk = json.loads(f.read())
                 n_parallel_docs_on_disk = len(n_parallel_docs_on_disk)
 
+        else:
+            n_parallel_docs_on_disk = 0
+
         n_new_parallel_docs = abs(len(self.parallel_documents) - n_parallel_docs_on_disk)
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
@@ -140,7 +143,7 @@ class Crawler:
             if idx % save_interval == 0 and idx != 0:
                 self.save_parallel_documents_to_disk()
                 self.save_visited_urls_to_disk()
-                self.driver.quit()
+                self.driver.delete_all_cookies()
                 self.driver = self.get_new_driver(self.snap)
 
         logging.info("Finishing crawl and saving.")
