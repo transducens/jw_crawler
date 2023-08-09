@@ -2,6 +2,19 @@ from src.Crawler import Crawler
 from src.SiteMap import SiteMap
 from src.util import *
 
+
+def check_for_existing_save_file(save_file: str) -> None:
+    delete_file = input(f"'{save_file}' exists and would be overwritten. "
+                                      f"Continue? (y/n)")
+    while ((delete_file == "y") or (delete_file == "n")) is False:
+        delete_file = input("Please enter 'y' or 'n'")
+
+    if delete_file == "y":
+        os.remove(f"{save_file}")
+    else:
+        exit(0)
+
+
 parser = argparse.ArgumentParser(
     prog="jw_crawler",
     description="Crawl the website jw.org for Mayan languages",
@@ -22,8 +35,9 @@ parser.add_argument("--main_language", help="Sets main language, which must corr
 parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape", default="es cak kek mam "
                                                                                                       "ctu quc poh tzh "
                                                                                                       "tzo yua")
-parser.add_argument("--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.")
-parser.add_argument("--load_visited_urls", action='store_true', help="Loads saved list of visited urls")
+parser.add_argument("--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
+                    default=False)
+parser.add_argument("--load_visited_urls", action='store_true', help="Loads saved list of visited urls", default=False)
 parser.add_argument("--parallel_docs_save_interval", default=50, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help="Sets how often to save parallel"
                                                                                  " docs after being scraped")
@@ -41,6 +55,11 @@ if args.crawl is False and args.scrape is False:
     logging.warning("You must select an operation, either --crawl or --scrape. Exiting.")
     exit(1)
 
+if args.load_parallel_docs is False and os.path.exists(f"{args.working_dir}/parallel_documents.json"):
+    check_for_existing_save_file(f"{args.working_dir}/parallel_documents.json")
+
+if args.load_visited_urls is False and os.path.exists(f"{args.working_dir}/visited_urls.json"):
+    check_for_existing_save_file(f"{args.working_dir}/visited_urls.json")
 
 if args.crawl:
     if args.load_visited_urls:
