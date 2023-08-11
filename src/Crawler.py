@@ -44,7 +44,9 @@ class Crawler:
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
             f.write(json.dumps(d))
-        logging.info(f"Saving {n_new_parallel_docs} new parallel documents to disk, for a current total of {len(self.parallel_documents)} parallel documents.")
+
+        logging.info(f"{n_new_parallel_docs} new parallel documents saved")
+        logging.info(f"{len(self.parallel_documents)} total parallel documents")
 
     def load_parallel_documents_from_disk(self) -> None:
         try:
@@ -70,9 +72,10 @@ class Crawler:
 
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
             f.write(json.dumps(self.site_map.visited_urls))
+
         logging.info(
-            f"Saving {len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key]])} "
-            f"visited urls to disk"
+            f"{len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key] is True])}"
+            f"/{len(self.site_map.visited_urls)} URLs crawled"
         )
 
     def load_visited_urls_from_disk(self) -> None:
@@ -131,7 +134,7 @@ class Crawler:
                         langs=langs
                     )
                 )
-                logging.info(f"Added parallel document at containing languages {str(langs)}")
+                logging.info(f"Added parallel document: {str(langs)}")
                 if max_number != 0 and len(self.parallel_documents) >= max_number:
                     logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
                     break
