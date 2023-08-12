@@ -19,6 +19,18 @@ class ParallelDocument:
         self.df: pd.DataFrame = pd.DataFrame()
         self.is_scraped = is_scraped
 
+    @staticmethod
+    def wait_for_language_to_load(driver: webdriver) -> None:
+        loading: bool = True
+        while loading is True:
+            try:
+                x_path_exp = ".//div[@class='loadingIndicator']//ancestor::div[@id='jsFullScreenLoadingIndicator']"
+                driver.find_element(By.XPATH, x_path_exp)
+                sleep(1)
+            except NoSuchElementException:
+                loading = False
+                sleep(1)
+
     def go_to_lang(self, lang: str, driver: webdriver) -> None:
         if driver.current_url != self.url:
             driver.get(self.url)
@@ -30,7 +42,7 @@ class ParallelDocument:
             driver.find_element(By.XPATH, f".//li[@data-value='{lang}']")
             sleep(1)
             language_input.send_keys(Keys.ENTER)
-            sleep(1)
+            self.wait_for_language_to_load(driver)
         except NoSuchElementException:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
 
