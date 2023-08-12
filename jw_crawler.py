@@ -8,7 +8,7 @@ from src.SiteMap import SiteMap
 
 def check_for_existing_save_file(save_file: str) -> None:
     delete_file = input(f"'{save_file}' exists and would be overwritten. "
-                                      f"Continue? (y/n)")
+                        f"Continue? (y/n)")
     while ((delete_file == "y") or (delete_file == "n")) is False:
         delete_file = input("Please enter 'y' or 'n'")
 
@@ -29,8 +29,10 @@ parser.add_argument("-c", "--crawl", action='store_true', default=False, help="R
 parser.add_argument("-s", "--scrape", action='store_true', default=False, help="Runs scrape operation, which extracts"
                                                                                "parallel text from parallel documents"
                                                                                "and saves them as dataframes")
+
+parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
 parser.add_argument("--site_map_url", help="Sets URL of site map to be downloaded before beginning"
-                                                          "crawl operation")
+                                           "crawl operation")
 parser.add_argument("--working_dir", default=".", help="Sets working directory. Default is the same directory as "
                                                        "script")
 parser.add_argument("--main_language", help="Sets main language, which must correspond to site map language.",
@@ -89,7 +91,6 @@ if args.crawl:
     )
 
 if args.scrape:
-
     crawler = Crawler(
         site_map=None,
         working_dir=args.working_dir,
@@ -98,7 +99,8 @@ if args.scrape:
     )
 
     crawler.scrape(
-        parallel_texts_save_interval=args.parallel_texts_save_interval
+        parallel_texts_save_interval=args.parallel_texts_save_interval,
+        rescrape=args.rescrape
     )
 
 logging.info("Finished")

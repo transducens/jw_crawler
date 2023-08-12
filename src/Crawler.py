@@ -186,16 +186,24 @@ class Crawler:
 
     def collect_parallel_texts(self, driver: webdriver,
                                save_interval: int,
+                               rescrape: bool
                                ):
 
         if not os.path.isdir(f"{self.working_dir}/dataframes/"):
             logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
             os.mkdir(f"{self.working_dir}/dataframes/")
+
         self.driver.delete_all_cookies()
+
         self.load_parallel_documents_from_disk()
+        if rescrape is True:
+            for doc in self.parallel_documents:
+                doc.is_scraped = False
+
         logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
+            # TODO: Solve the naming problem
             doc_name = parallel_document.url.split("org")[1]
             doc_name = doc_name.replace("/", "_")
             parallel_text_df = parallel_document.get_parallel_texts(driver)
@@ -227,10 +235,11 @@ class Crawler:
                                        max_number=max_number_parallel_docs
                                        )
 
-    def scrape(self, parallel_texts_save_interval: int):
+    def scrape(self, parallel_texts_save_interval: int, rescrape: bool):
 
         self.collect_parallel_texts(driver=self.driver,
                                     save_interval=parallel_texts_save_interval,
+                                    rescrape=rescrape
                                     )
 
     @staticmethod
