@@ -35,9 +35,8 @@ class Crawler:
         self.working_dir = working_dir
         self.langs = langs
         self.snap = snap
-
-        options = Options()
-        options.add_argument("--headless")
+        self.starting_time: time = time()
+        self.elapsed_time: time = 0
         self.driver = self.get_new_driver(snap=self.snap)
 
     def save_parallel_documents_to_disk(self) -> None:
@@ -90,7 +89,11 @@ class Crawler:
             os.mkdir(self.working_dir)
 
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
+            self.site_map.visited_urls["starting_time"] = self.starting_time
+            self.site_map.visited_urls["elapsed_time"] = time()
             f.write(json.dumps(self.site_map.visited_urls))
+            del self.site_map.visited_urls["starting_time"]
+            del self.site_map.visited_urls["elapsed_time"]
 
         logging.info(
             f"{len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key] is True])}"
@@ -102,6 +105,10 @@ class Crawler:
         try:
             with open(f"{self.working_dir}/visited_urls.json") as f:
                 self.site_map.visited_urls = json.loads(f.read())
+                self.starting_time = self.site_map.visited_urls["starting_time"]
+                self.elapsed_time = self.site_map.visited_urls["elapsed_time"]
+                del self.site_map.visited_urls["starting_time"]
+                del self.site_map.visited_urls["elapsed_time"]
         except FileNotFoundError:
             logging.warning(f"No visited urls file found at {self.working_dir}/. Exiting.")
             exit(1)
@@ -127,6 +134,8 @@ class Crawler:
 
         urls_to_visit = list(self.site_map.visited_urls.keys())
         urls_to_visit = [url for url in urls_to_visit if self.site_map.visited_urls[url] is False]
+
+        self.starting_time = time()
 
         for idx, url in enumerate(urls_to_visit):
             driver.get(url)
@@ -170,6 +179,10 @@ class Crawler:
         logging.info("Finishing crawl and saving.")
         self.save_visited_urls_to_disk()
         self.save_parallel_documents_to_disk()
+        if self.elapsed_time == 0:
+            self.elapsed_time = time()
+        elapsed_time = int(self.elapsed_time - self.starting_time)
+        logging.info(f"Finished crawl in {timedelta(seconds=elapsed_time)}")
 
     def collect_parallel_texts(self, driver: webdriver,
                                save_interval: int,
