@@ -1,4 +1,8 @@
-from src.util import *
+from typing import List
+
+import requests
+from lxml import etree
+from src.Crawler import logging
 
 
 class SiteMap:

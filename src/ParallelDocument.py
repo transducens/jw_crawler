@@ -1,4 +1,13 @@
-from src.util import *
+from time import sleep
+
+import pandas as pd
+from typing import List
+
+from selenium.common import NoSuchElementException
+from selenium.webdriver import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox import webdriver
+from src.Crawler import logging
 
 
 class ParallelDocument:
