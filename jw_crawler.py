@@ -29,7 +29,7 @@ parser.add_argument("-c", "--crawl", action='store_true', default=False, help="R
 parser.add_argument("-s", "--scrape", action='store_true', default=False, help="Runs scrape operation, which extracts"
                                                                                "parallel text from parallel documents"
                                                                                "and saves them as dataframes")
-parser.add_argument("--site_map_url", required=True, help="Sets URL of site map to be downloaded before beginning"
+parser.add_argument("--site_map_url", help="Sets URL of site map to be downloaded before beginning"
                                                           "crawl operation")
 parser.add_argument("--working_dir", default=".", help="Sets working directory. Default is the same directory as "
                                                        "script")
@@ -91,7 +91,7 @@ if args.crawl:
 if args.scrape:
 
     crawler = Crawler(
-        site_map=SiteMap(url=""),
+        site_map=None,
         working_dir=args.working_dir,
         snap=args.snap,
         langs=langs,
