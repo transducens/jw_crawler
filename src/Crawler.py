@@ -39,7 +39,7 @@ class Crawler:
         self.elapsed_time: time = 0
         self.driver = self.get_new_driver(snap=self.snap)
 
-    def save_parallel_documents_to_disk(self) -> None:
+    def save_parallel_documents_to_disk(self, suppress_log: bool = False) -> None:
         d = {}
         for parallel_doc in self.parallel_documents:
             d[parallel_doc.url] = {
@@ -62,9 +62,9 @@ class Crawler:
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
             f.write(json.dumps(d))
-
-        logging.info(f"{n_new_parallel_docs} new parallel documents saved")
-        logging.info(f"{len(self.parallel_documents)} total parallel documents")
+        if suppress_log is False:
+            logging.info(f"{n_new_parallel_docs} new parallel documents saved")
+            logging.info(f"{len(self.parallel_documents)} total parallel documents")
 
     def load_parallel_documents_from_disk(self) -> None:
         try:
@@ -191,7 +191,7 @@ class Crawler:
         if not os.path.isdir(f"{self.working_dir}/dataframes/"):
             logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
             os.mkdir(f"{self.working_dir}/dataframes/")
-
+        self.driver.delete_all_cookies()
         self.load_parallel_documents_from_disk()
         logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
@@ -201,16 +201,17 @@ class Crawler:
             parallel_text_df = parallel_document.get_parallel_texts(driver)
             parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
             logging.info(
-                f"Saved parallel text dataframe at {self.working_dir}/dataframes/{doc_name}.tsv containing languages: "
+                f"New parallel text dataframe: {self.working_dir}/dataframes/{doc_name}.tsv containing languages: "
                 f"{parallel_document.langs}."
             )
             parallel_document.is_scraped = True
             if idx % save_interval == 0 and idx != 0:
-                n_docs_scraped = abs(len(parallel_documents_to_scrape) - idx)
-                logging.info(f"Scraped {n_docs_scraped} new parallel documents.")
-                self.save_parallel_documents_to_disk()
+                n_docs_scraped = len([doc for doc in self.parallel_documents if doc.is_scraped is True])
+                logging.info(f"{n_docs_scraped}/{len(self.parallel_documents)} parallel documents scraped. "
+                             f"Updating parallel documents status to 'scraped'")
+                self.save_parallel_documents_to_disk(suppress_log=True)
         logging.info("Finishing scrape and saving.")
-        self.save_parallel_documents_to_disk()
+        self.save_parallel_documents_to_disk(suppress_log=True)
 
     def crawl(self,
               parallel_documents_save_interval: int,
