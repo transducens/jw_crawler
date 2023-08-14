@@ -204,8 +204,7 @@ class Crawler:
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
             # TODO: Solve the naming problem
-            doc_name = parallel_document.url.split("org")[1]
-            doc_name = doc_name.replace("/", "_")
+            doc_name = parallel_document.get_encoded_url_string()
             parallel_text_df = parallel_document.get_parallel_texts(driver)
             parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
             logging.info(
@@ -252,4 +251,3 @@ class Crawler:
             driver_service = Service(executable_path=geckodriver_path)
             return webdriver.Firefox(options=options, service=driver_service)
         return webdriver.Firefox(options=options)
-

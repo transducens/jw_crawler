@@ -1,8 +1,7 @@
-from time import sleep
-
+import base64
 import pandas as pd
+from time import sleep
 from typing import List
-
 from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
@@ -39,8 +38,8 @@ class ParallelDocument:
             language_input = driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
             language_input.clear()
             language_input.send_keys(lang)
+            self.wait_for_language_to_load(driver)
             driver.find_element(By.XPATH, f".//li[@data-value='{lang}']")
-            sleep(1)
             language_input.send_keys(Keys.ENTER)
             self.wait_for_language_to_load(driver)
         except NoSuchElementException:
@@ -70,6 +69,7 @@ class ParallelDocument:
         try:
             dfs = [self.get_text_by_lang(lang=lang, driver=driver) for lang in self.langs]
             self.df = pd.concat(dfs, axis=1)
+            self.df.index.name = self.url
             return self.df
 
         except Exception:
@@ -78,3 +78,8 @@ class ParallelDocument:
 
     def save_dataframe(self) -> None:
         self.df.to_csv(f"{self.url}.csv")
+
+    def get_encoded_url_string(self):
+        url_string = self.url[:-1].encode('ASCII')
+        url_string = base64.b64encode(url_string)
+        return url_string.decode('ASCII')[-20:]
