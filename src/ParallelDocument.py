@@ -51,6 +51,7 @@ class ParallelDocument:
         q_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'q')))]")
         if len(p_list) == 0 and len(q_list) == 0:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
+            driver.save_screenshot(f"error_finding_{lang}.png")
             return pd.DataFrame()
 
         p_text = [p.text for p in p_list if p.text != ""]
