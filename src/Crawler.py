@@ -203,12 +203,11 @@ class Crawler:
         logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
-            # TODO: Solve the naming problem
             doc_name = parallel_document.get_encoded_url_string()
             parallel_text_df = parallel_document.get_parallel_texts(driver)
             parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
             logging.info(
-                f"New parallel text dataframe: {self.working_dir}/dataframes/{doc_name}.tsv containing languages: "
+                f"New dataframe from {parallel_document.url}: "
                 f"{parallel_document.langs}."
             )
             parallel_document.is_scraped = True
@@ -217,6 +216,7 @@ class Crawler:
                 logging.info(f"{n_docs_scraped}/{len(self.parallel_documents)} parallel documents scraped. "
                              f"Updating parallel documents status to 'scraped'")
                 self.save_parallel_documents_to_disk(suppress_log=True)
+                self.driver.delete_all_cookies()
         logging.info("Finishing scrape and saving.")
         self.save_parallel_documents_to_disk(suppress_log=True)
 

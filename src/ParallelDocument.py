@@ -1,11 +1,13 @@
 import base64
 import pandas as pd
 from time import sleep
-from typing import List
+from typing import List, Tuple
 from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox import webdriver
+from selenium.webdriver.remote.webelement import WebElement
+
 from src.Crawler import logging
 
 
@@ -37,6 +39,7 @@ class ParallelDocument:
         try:
             language_input = driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
             language_input.clear()
+            self.wait_for_language_to_load(driver)
             language_input.send_keys(lang)
             self.wait_for_language_to_load(driver)
             driver.find_element(By.XPATH, f".//li[@data-value='{lang}']")
@@ -46,13 +49,29 @@ class ParallelDocument:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
 
     def get_text_by_lang(self, lang: str, driver: webdriver) -> pd.DataFrame:
+
+        def get_p_q_lists() -> Tuple[List[WebElement], List[WebElement]]:
+            p = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'p')))]")
+            q = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'q')))]")
+            return p, q
+
         self.go_to_lang(lang, driver)
-        p_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'p')))]")
-        q_list = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'q')))]")
-        if len(p_list) == 0 and len(q_list) == 0:
-            logging.warning(f"Language {lang} not found in parallel document {self.url}")
-            driver.save_screenshot(f"error_finding_{lang}.png")
-            return pd.DataFrame()
+        attempt = 1
+
+        while True:
+            p_list, q_list = get_p_q_lists()
+            if len(p_list) == 0 and len(q_list) == 0:
+                logging.warning(f"{lang} not found in parallel document at {self.url}. Attempt {attempt}")
+                driver.delete_all_cookes()
+                driver.refresh()
+                attempt += 1
+                if attempt >= 4:
+                    driver.save_screenshot(f"error_finding_{lang}.png")
+                    logging.warning(f"Language {lang} not found in parallel document. Saving screenshot and stopping "
+                                    f"for review")
+                    exit(1)
+            else:
+                break
 
         p_text = [p.text for p in p_list if p.text != ""]
         p_indices = [f"p{x}" for x in range(1, len(p_text) + 1)]

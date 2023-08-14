@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import requests
 from lxml import etree
@@ -8,14 +8,14 @@ from src.Crawler import logging
 class SiteMap:
 
     def __init__(self,
-                 url: str,
+                 url: Optional[str],
                  main_language: str = "es",
                  exclude: List[str] = None,
                  visited_urls: dict = None):
         self.map_url = url
         self.main_language = main_language
         self.visited_urls = {} if visited_urls is None else visited_urls
-        if self.visited_urls == {}:
+        if self.visited_urls == {} and self.map_url is not None:
             response = requests.get(self.map_url)
             root = etree.fromstring(response.content)
             for sitemap in root:
