@@ -2,7 +2,7 @@ import logging
 import json
 import os
 from time import sleep, time
-from typing import List
+from typing import List, Optional
 from datetime import timedelta
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -25,7 +25,7 @@ logging.basicConfig(
 
 class Crawler:
     def __init__(self,
-                 site_map: SiteMap,
+                 site_map: Optional[SiteMap],
                  working_dir: str,
                  snap: bool,
                  langs: List[str]
