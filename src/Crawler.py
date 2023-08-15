@@ -1,8 +1,9 @@
 import logging
 import json
 import os
+import pandas as pd
 from time import sleep, time
-from typing import List
+from typing import List, Tuple
 from datetime import timedelta
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -203,14 +204,22 @@ class Crawler:
         logging.info("Begin scraping docs for parallel texts")
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
+
             doc_name = parallel_document.get_encoded_url_string()
             parallel_text_df = parallel_document.get_parallel_texts(driver)
-            parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
-            logging.info(
-                f"New dataframe from {parallel_document.url}: "
-                f"{parallel_document.langs}."
-            )
-            parallel_document.is_scraped = True
+
+            is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs)
+            if is_valid:
+                parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
+                logging.info(
+                    f"New dataframe from {parallel_document.url}: "
+                    f"{parallel_document.langs}."
+                )
+                parallel_document.is_scraped = True
+            else:
+                logging.warning(f"Failed to scrape parallel document at {parallel_document.url}: {valid_msg}")
+                parallel_document.is_scraped = False
+
             if idx % save_interval == 0 and idx != 0:
                 n_docs_scraped = len([doc for doc in self.parallel_documents if doc.is_scraped is True])
                 logging.info(f"{n_docs_scraped}/{len(self.parallel_documents)} parallel documents scraped. "
@@ -219,6 +228,25 @@ class Crawler:
                 self.driver.delete_all_cookies()
         logging.info("Finishing scrape and saving.")
         self.save_parallel_documents_to_disk(suppress_log=True)
+
+    @staticmethod
+    def validate_dataframe(df: pd.DataFrame, langs: List[str]) -> Tuple[bool, str]:
+
+        if df.empty is True:
+            return False, "Dataframe is empty."
+
+        if df.isna().values.any() is True:
+            return False, "Null values in dataframe."
+
+        langs_in_df = [lang for lang in df.columns.values]
+        for lang in langs:
+            if lang not in langs_in_df:
+                return False, "Missing languages in dataframe."
+
+        return True, ""
+
+
+
 
     def crawl(self,
               parallel_documents_save_interval: int,
