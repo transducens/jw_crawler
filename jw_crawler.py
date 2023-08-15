@@ -40,9 +40,9 @@ parser.add_argument("--main_language", help="Sets main language, which must corr
 parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape", default="es cak kek mam "
                                                                                                       "ctu quc poh tzh "
                                                                                                       "tzo yua")
-parser.add_argument("--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
+parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
-parser.add_argument("--load_visited_urls", action='store_true', help="Loads saved list of visited urls", default=False)
+parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls", default=False)
 parser.add_argument("--parallel_docs_save_interval", default=50, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help="Sets how often to save parallel"
                                                                                  " docs after being scraped")
@@ -54,33 +54,41 @@ parser.add_argument("--snap", action='store_true', default=False, help="Include 
 
 args = parser.parse_args()
 
-langs = args.languages.split()
+if args.crawl is True:
+    if args.load_visited_urls is False:
+        assert args.site_map_url is not None, "No site map specified. Either load visited urls file with -v or " \
+                                              "specify the url of a site map"
+        if os.path.exists(f"{args.working_dir}/visited_urls.json"):
+            check_for_existing_save_file(f"{args.working_dir}/visited_urls.json")
+    else:
+        try:
+            with open(f"{args.working_dir}/visited_urls.json") as f:
+                visited_urls = json.loads(f.read())
+        except FileNotFoundError as e:
+            print(f"{e}. No 'visited_urls.json' file found in working dir. Use --site_map_url to fetch a new site map.")
+            exit(1)
 
-if args.crawl is False and args.scrape is False:
-    logging.warning("You must select an operation, either --crawl or --scrape. Exiting.")
-    exit(1)
+    if args.load_parallel_docs is False:
+        if os.path.exists(f"{args.working_dir}/parallel_documents.json"):
+            check_for_existing_save_file(f"{args.working_dir}/parallel_documents.json")
+    else:
+        assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"No 'parallel_documents.json' file found."
 
-if args.load_parallel_docs is False and os.path.exists(f"{args.working_dir}/parallel_documents.json"):
-    check_for_existing_save_file(f"{args.working_dir}/parallel_documents.json")
+    if os.path.exists(args.working_dir) is False:
+        os.mkdir(args.working_dir)
 
-if args.load_visited_urls is False and os.path.exists(f"{args.working_dir}/visited_urls.json"):
-    check_for_existing_save_file(f"{args.working_dir}/visited_urls.json")
-
-if args.crawl:
-    if args.load_visited_urls:
-        with open(f"{args.working_dir}/visited_urls.json") as f:
-            visited_urls = json.loads(f.read())
+    print("Crawling in progress. Refer to 'crawl.log' for updates.")
 
     crawler = Crawler(
         site_map=SiteMap(
-            url=args.site_map_url,
-            exclude=args.exclude.split(" "),
+            url=args.site_map_url if args.load_visited_urls is False else None,
+            exclude=args.exclude.split(" ") if args.exclude is not None else None,
             main_language=args.main_language,
-            visited_urls=visited_urls if args.load_visited_urls else None,
+            visited_urls=visited_urls if args.load_visited_urls is True else None,
         ),
         working_dir=args.working_dir,
         snap=args.snap,
-        langs=langs,
+        langs=args.languages.split(),
     )
 
     crawler.crawl(
@@ -90,17 +98,25 @@ if args.crawl:
         max_number_parallel_docs=args.max_number_parallel_docs,
     )
 
+
 if args.scrape:
+    assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"'parallel_documents.json' not found in " \
+                                                                          f"working directory {args.working_dir}"
+    print("Scraping progress. Refer to 'crawl.log' for updates.")
+
     crawler = Crawler(
         site_map=None,
         working_dir=args.working_dir,
         snap=args.snap,
-        langs=langs,
+        langs=args.languages.split(),
     )
 
     crawler.scrape(
         parallel_texts_save_interval=args.parallel_texts_save_interval,
         rescrape=args.rescrape
     )
+
+if args.crawl is False and args.scrape is False:
+    raise RuntimeError("You must select an operation, either --crawl or --scrape.")
 
 logging.info("Finished")

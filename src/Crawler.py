@@ -3,7 +3,7 @@ import json
 import os
 import pandas as pd
 from time import sleep, time
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from datetime import timedelta
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -26,7 +26,7 @@ logging.basicConfig(
 
 class Crawler:
     def __init__(self,
-                 site_map: SiteMap,
+                 site_map: Optional[SiteMap],
                  working_dir: str,
                  snap: bool,
                  langs: List[str]
@@ -209,7 +209,7 @@ class Crawler:
             parallel_text_df = parallel_document.get_parallel_texts(driver)
 
             is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs)
-            if is_valid:
+            if is_valid is True:
                 parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
                 logging.info(
                     f"New dataframe from {parallel_document.url}: "
@@ -244,9 +244,6 @@ class Crawler:
                 return False, "Missing languages in dataframe."
 
         return True, ""
-
-
-
 
     def crawl(self,
               parallel_documents_save_interval: int,
