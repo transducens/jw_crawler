@@ -205,6 +205,7 @@ class Crawler:
 
         logging.info("Begin scraping docs for parallel texts")
         self.starting_time = time()
+        self.elapsed_time = 0
 
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
@@ -230,8 +231,14 @@ class Crawler:
                              f"Updating parallel documents status to 'scraped'")
                 self.save_parallel_documents_to_disk(suppress_log=True)
                 self.driver.delete_all_cookies()
+
         logging.info("Finishing scrape and saving.")
+
+        n_unscraped = len([doc for doc in self.parallel_documents if doc.is_scraped is False])
+        if n_unscraped != 0:
+            logging.warning(f"{n_unscraped} unscraped parallel documents on disk")
         self.save_parallel_documents_to_disk(suppress_log=True)
+
         if self.elapsed_time == 0:
             self.elapsed_time = time()
         elapsed_time = abs(int(self.elapsed_time - self.starting_time))
@@ -239,6 +246,9 @@ class Crawler:
 
     @staticmethod
     def validate_dataframe(df: pd.DataFrame, langs: List[str]) -> Tuple[bool, str]:
+
+        if df is None:
+            return False, "Dataframe is 'None'"
 
         if df.empty is True:
             return False, "Dataframe is empty."

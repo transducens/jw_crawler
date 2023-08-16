@@ -1,7 +1,7 @@
 import base64
 import pandas as pd
 from time import sleep
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from selenium.common import NoSuchElementException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
@@ -46,7 +46,7 @@ class ParallelDocument:
         except NoSuchElementException:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
 
-    def get_text_by_lang(self, lang: str, driver: webdriver) -> pd.DataFrame:
+    def get_text_by_lang(self, lang: str, driver: webdriver) -> Union[pd.DataFrame, None]:
 
         def get_p_q_lists() -> Tuple[List[WebElement], List[WebElement]]:
             p = driver.find_elements(By.XPATH, ".//*[boolean(number(substring-after(@id, 'p')))]")
@@ -63,11 +63,10 @@ class ParallelDocument:
                 driver.delete_all_cookes()
                 driver.refresh()
                 attempt += 1
-                if attempt >= 4:
-                    driver.save_screenshot(f"error_finding_{lang}.png")
-                    logging.warning(f"Language {lang} not found in parallel document. Saving screenshot and stopping "
-                                    f"for review")
-                    exit(1)
+                if attempt >= 3:
+                    driver.save_screenshot(f"error_{lang}_{self.url}.png")
+                    logging.warning(f"Language {lang} not found in parallel document. Saving screenshot.")
+                    return None
             else:
                 break
 
@@ -83,7 +82,7 @@ class ParallelDocument:
 
         return pd.concat([p_df, q_df], axis=0)
 
-    def get_parallel_texts(self, driver) -> pd.DataFrame:
+    def get_parallel_texts(self, driver) -> Union[pd.DataFrame, None]:
         try:
             dfs = [self.get_text_by_lang(lang=lang, driver=driver) for lang in self.langs]
             self.df = pd.concat(dfs, axis=1)
@@ -92,7 +91,7 @@ class ParallelDocument:
 
         except Exception:
             logging.warning(f"Failed to scrape {self.url}")
-            return pd.DataFrame()
+            return None
 
     def save_dataframe(self) -> None:
         self.df.to_csv(f"{self.url}.csv")
