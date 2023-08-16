@@ -43,9 +43,7 @@ parser.add_argument("--languages", help="Sets languages to look for during crawl
 parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
 parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls", default=False)
-parser.add_argument("--parallel_docs_save_interval", default=50, type=int, help="Sets how often to save parallel docs")
-parser.add_argument("--parallel_texts_save_interval", default=50, type=int, help="Sets how often to save parallel"
-                                                                                 " docs after being scraped")
+parser.add_argument("--save_interval", default=50, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
 parser.add_argument("--exclude", help="String containing tokens to exclude from site map separated by spaces",
@@ -92,7 +90,7 @@ if args.crawl is True:
     )
 
     crawler.crawl(
-        save_interval=args.parallel_docs_save_interval,
+        save_interval=args.save_interval,
         load_parallel_docs=args.load_parallel_docs,
         load_visited_urls=args.load_visited_urls,
         max_number=args.max_number_parallel_docs,
@@ -112,7 +110,7 @@ if args.scrape:
     )
 
     crawler.scrape(
-        save_interval=args.parallel_texts_save_interval,
+        save_interval=args.save_interval,
         rescrape=args.rescrape
     )
 

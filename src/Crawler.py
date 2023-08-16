@@ -2,7 +2,7 @@ import logging
 import json
 import os
 import pandas as pd
-from time import sleep, time
+from time import time
 from typing import List, Optional, Tuple
 from datetime import timedelta
 from selenium.common import NoSuchElementException
