@@ -30,7 +30,6 @@ class ParallelDocument:
                 sleep(1)
             except NoSuchElementException:
                 loading = False
-                sleep(1)
 
     def go_to_lang(self, lang: str, driver: webdriver) -> None:
         if driver.current_url != self.url:
@@ -39,7 +38,6 @@ class ParallelDocument:
         try:
             language_input = driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
             language_input.clear()
-            self.wait_for_language_to_load(driver)
             language_input.send_keys(lang)
             self.wait_for_language_to_load(driver)
             driver.find_element(By.XPATH, f".//li[@data-value='{lang}']")

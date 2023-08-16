@@ -62,7 +62,10 @@ class Crawler:
         n_new_parallel_docs = abs(len(self.parallel_documents) - n_parallel_docs_on_disk)
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
+            d["starting_time"] = self.starting_time
+            d["elapsed_time"] = time()
             f.write(json.dumps(d))
+
         if suppress_log is False:
             logging.info(f"{n_new_parallel_docs} new parallel documents saved")
             logging.info(f"{len(self.parallel_documents)} total parallel documents")
@@ -70,17 +73,23 @@ class Crawler:
     def load_parallel_documents_from_disk(self) -> None:
         try:
             with open(f"{self.working_dir}/parallel_documents.json") as f:
-                parallel_docs = json.loads(f.read())
+                d = json.loads(f.read())
         except FileNotFoundError:
             logging.warning(f"No parallel documents file found in working directory. Exiting.")
             exit(1)
+
+        self.starting_time = d['starting_time']
+        self.elapsed_time = d['elapsed_time']
+        del d['starting_time']
+        del d['elapsed_time']
+
         self.parallel_documents = [
             ParallelDocument(
                 url=key,
-                langs=parallel_docs[key]["langs"],
-                main_lang=parallel_docs[key]["main_lang"],
-                is_scraped=parallel_docs[key]["is_scraped"],
-            ) for key in parallel_docs.keys()
+                langs=d[key]["langs"],
+                main_lang=d[key]["main_lang"],
+                is_scraped=d[key]["is_scraped"],
+            ) for key in d.keys()
         ]
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
 
@@ -90,11 +99,8 @@ class Crawler:
             os.mkdir(self.working_dir)
 
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
-            self.site_map.visited_urls["starting_time"] = self.starting_time
-            self.site_map.visited_urls["elapsed_time"] = time()
+
             f.write(json.dumps(self.site_map.visited_urls))
-            del self.site_map.visited_urls["starting_time"]
-            del self.site_map.visited_urls["elapsed_time"]
 
         logging.info(
             f"{len([key for key in self.site_map.visited_urls.keys() if self.site_map.visited_urls[key] is True])}"
@@ -106,10 +112,6 @@ class Crawler:
         try:
             with open(f"{self.working_dir}/visited_urls.json") as f:
                 self.site_map.visited_urls = json.loads(f.read())
-                self.starting_time = self.site_map.visited_urls["starting_time"]
-                self.elapsed_time = self.site_map.visited_urls["elapsed_time"]
-                del self.site_map.visited_urls["starting_time"]
-                del self.site_map.visited_urls["elapsed_time"]
         except FileNotFoundError:
             logging.warning(f"No visited urls file found at {self.working_dir}/. Exiting.")
             exit(1)
@@ -119,11 +121,11 @@ class Crawler:
             f"visited urls from file"
         )
 
-    def gather_parallel_documents(self, driver: webdriver,
-                                  save_interval: int,
-                                  load_parallel_docs: bool,
-                                  load_visited_urls: bool,
-                                  max_number: int):
+    def crawl(self,
+              save_interval: int,
+              load_parallel_docs: bool,
+              load_visited_urls: bool,
+              max_number: int):
 
         if load_visited_urls:
             self.load_visited_urls_from_disk()
@@ -139,17 +141,17 @@ class Crawler:
         self.starting_time = time()
 
         for idx, url in enumerate(urls_to_visit):
-            driver.get(url)
+            self.driver.get(url)
             logging.info(f"Crawling {url}")
             langs = []
             for language in self.langs:
                 try:
-                    language_input = driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
+                    language_input = self.driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
                     language_input.clear()
                     language_input.send_keys(language)
-                    sleep(1)
+                    ParallelDocument.wait_for_language_to_load(self.driver)
                     try:
-                        driver.find_element(By.XPATH, f".//li[@data-value='{language}']")
+                        self.driver.find_element(By.XPATH, f".//li[@data-value='{language}']")
                         langs.append(language)
                     except NoSuchElementException:
                         logging.debug(f"'{language}' not found in document")
@@ -182,13 +184,13 @@ class Crawler:
         self.save_parallel_documents_to_disk()
         if self.elapsed_time == 0:
             self.elapsed_time = time()
-        elapsed_time = int(self.elapsed_time - self.starting_time)
+        elapsed_time = abs(int(self.elapsed_time - self.starting_time))
         logging.info(f"Finished crawl in {timedelta(seconds=elapsed_time)}")
 
-    def collect_parallel_texts(self, driver: webdriver,
-                               save_interval: int,
-                               rescrape: bool
-                               ):
+    def scrape(self,
+               save_interval: int,
+               rescrape: bool
+               ):
 
         if not os.path.isdir(f"{self.working_dir}/dataframes/"):
             logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
@@ -202,11 +204,13 @@ class Crawler:
                 doc.is_scraped = False
 
         logging.info("Begin scraping docs for parallel texts")
+        self.starting_time = time()
+
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
 
             doc_name = parallel_document.get_encoded_url_string()
-            parallel_text_df = parallel_document.get_parallel_texts(driver)
+            parallel_text_df = parallel_document.get_parallel_texts(self.driver)
 
             is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs)
             if is_valid is True:
@@ -228,6 +232,10 @@ class Crawler:
                 self.driver.delete_all_cookies()
         logging.info("Finishing scrape and saving.")
         self.save_parallel_documents_to_disk(suppress_log=True)
+        if self.elapsed_time == 0:
+            self.elapsed_time = time()
+        elapsed_time = abs(int(self.elapsed_time - self.starting_time))
+        logging.info(f"Finished scrape in {timedelta(seconds=elapsed_time)}")
 
     @staticmethod
     def validate_dataframe(df: pd.DataFrame, langs: List[str]) -> Tuple[bool, str]:
@@ -244,27 +252,6 @@ class Crawler:
                 return False, "Missing languages in dataframe."
 
         return True, ""
-
-    def crawl(self,
-              parallel_documents_save_interval: int,
-              load_parallel_docs: bool,
-              load_visited_urls: bool,
-              max_number_parallel_docs: int,
-              ):
-
-        self.gather_parallel_documents(driver=self.driver,
-                                       save_interval=parallel_documents_save_interval,
-                                       load_parallel_docs=load_parallel_docs,
-                                       load_visited_urls=load_visited_urls,
-                                       max_number=max_number_parallel_docs
-                                       )
-
-    def scrape(self, parallel_texts_save_interval: int, rescrape: bool):
-
-        self.collect_parallel_texts(driver=self.driver,
-                                    save_interval=parallel_texts_save_interval,
-                                    rescrape=rescrape
-                                    )
 
     @staticmethod
     def get_new_driver(snap: bool = False) -> webdriver.Firefox:

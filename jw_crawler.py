@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 
-from src.Crawler import Crawler, logging
+from src.Crawler import Crawler
 from src.SiteMap import SiteMap
 
 
@@ -92,10 +92,10 @@ if args.crawl is True:
     )
 
     crawler.crawl(
-        parallel_documents_save_interval=args.parallel_docs_save_interval,
+        save_interval=args.parallel_docs_save_interval,
         load_parallel_docs=args.load_parallel_docs,
         load_visited_urls=args.load_visited_urls,
-        max_number_parallel_docs=args.max_number_parallel_docs,
+        max_number=args.max_number_parallel_docs,
     )
 
 
@@ -112,11 +112,9 @@ if args.scrape:
     )
 
     crawler.scrape(
-        parallel_texts_save_interval=args.parallel_texts_save_interval,
+        save_interval=args.parallel_texts_save_interval,
         rescrape=args.rescrape
     )
 
 if args.crawl is False and args.scrape is False:
     raise RuntimeError("You must select an operation, either --crawl or --scrape.")
-
-logging.info("Finished")
