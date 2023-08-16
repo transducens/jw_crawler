@@ -53,7 +53,7 @@ class Crawler:
 
         if os.path.exists(f"{self.working_dir}/parallel_documents.json"):
             with open(f"{self.working_dir}/parallel_documents.json") as f:
-                n_parallel_docs_on_disk = json.loads(f.read())
+                n_parallel_docs_on_disk = [key for key in json.loads(f.read()).keys() if (key != 'elapsed_time') and (key != 'starting_time')]
                 n_parallel_docs_on_disk = len(n_parallel_docs_on_disk)
 
         else:
