@@ -99,4 +99,4 @@ class ParallelDocument:
     def get_encoded_url_string(self):
         url_string = self.url[:-1].encode('ASCII')
         url_string = base64.b64encode(url_string)
-        return url_string.decode('ASCII')[-20:]
+        return url_string.decode('ASCII')[-50:]
