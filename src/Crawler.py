@@ -46,7 +46,8 @@ class Crawler:
             d[parallel_doc.url] = {
                 "langs": parallel_doc.langs,
                 "main_lang": parallel_doc.main_lang,
-                "is_scraped": parallel_doc.is_scraped
+                "is_scraped": parallel_doc.is_scraped,
+                "uuid": parallel_doc.uuid
             }
         if not os.path.isdir(self.working_dir):
             os.mkdir(self.working_dir)
@@ -86,6 +87,7 @@ class Crawler:
                 langs=d[key]["langs"],
                 main_lang=d[key]["main_lang"],
                 is_scraped=d[key]["is_scraped"],
+                uuid=d[key]["uuid"]
             ) for key in d.keys() if key != 'starting_time' and key != 'elapsed_time'
         ]
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
@@ -210,7 +212,7 @@ class Crawler:
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
 
-            doc_name = parallel_document.get_encoded_url_string()
+            doc_name = parallel_document.uuid
             parallel_text_df = parallel_document.get_parallel_texts(self.driver)
 
             is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs)

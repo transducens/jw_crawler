@@ -1,5 +1,5 @@
-import base64
 import pandas as pd
+from uuid import uuid4
 from time import sleep
 from typing import List, Tuple, Union
 from selenium.common import NoSuchElementException
@@ -13,12 +13,13 @@ from src.Crawler import logging
 
 class ParallelDocument:
 
-    def __init__(self, url: str, langs: List[str], main_lang: str = "es", is_scraped: bool = False):
+    def __init__(self, url: str, langs: List[str], main_lang: str = "es", is_scraped: bool = False, uuid: uuid4 = None):
         self.url = url
         self.langs = langs
         self.main_lang = main_lang
         self.df: pd.DataFrame = pd.DataFrame()
         self.is_scraped = is_scraped
+        self.uuid = uuid if uuid is not None else uuid4()
 
     @staticmethod
     def wait_for_language_to_load(driver: webdriver) -> None:
@@ -92,11 +93,3 @@ class ParallelDocument:
         except Exception:
             logging.warning(f"Failed to scrape {self.url}")
             return None
-
-    def save_dataframe(self) -> None:
-        self.df.to_csv(f"{self.url}.csv")
-
-    def get_encoded_url_string(self):
-        url_string = self.url[:-1].encode('ASCII')
-        url_string = base64.b64encode(url_string)
-        return url_string.decode('ASCII')[-50:]
