@@ -36,12 +36,12 @@ class Crawler:
         self.working_dir = working_dir
         self.langs = langs
         self.snap = snap
-        self.starting_time: time = time()
-        self.elapsed_time: time = 0
+        self.starting_time: time = None
+        self.elapsed_time: time = None
         self.driver = self.get_new_driver(snap=self.snap)
 
     def save_parallel_documents_to_disk(self, suppress_log: bool = False) -> None:
-        d = {}
+        d = {"starting_time": self.starting_time, "elapsed_time": time()}
         for parallel_doc in self.parallel_documents:
             d[parallel_doc.url] = {
                 "langs": parallel_doc.langs,
@@ -53,7 +53,8 @@ class Crawler:
 
         if os.path.exists(f"{self.working_dir}/parallel_documents.json"):
             with open(f"{self.working_dir}/parallel_documents.json") as f:
-                n_parallel_docs_on_disk = [key for key in json.loads(f.read()).keys() if (key != 'elapsed_time') and (key != 'starting_time')]
+                n_parallel_docs_on_disk = [key for key in json.loads(f.read()).keys() if
+                                           (key != 'elapsed_time') and (key != 'starting_time')]
                 n_parallel_docs_on_disk = len(n_parallel_docs_on_disk)
 
         else:
@@ -62,8 +63,6 @@ class Crawler:
         n_new_parallel_docs = abs(len(self.parallel_documents) - n_parallel_docs_on_disk)
 
         with open(f"{self.working_dir}/parallel_documents.json", "w") as f:
-            d["starting_time"] = self.starting_time
-            d["elapsed_time"] = time()
             f.write(json.dumps(d))
 
         if suppress_log is False:
@@ -80,8 +79,6 @@ class Crawler:
 
         self.starting_time = d['starting_time']
         self.elapsed_time = d['elapsed_time']
-        del d['starting_time']
-        del d['elapsed_time']
 
         self.parallel_documents = [
             ParallelDocument(
@@ -89,7 +86,7 @@ class Crawler:
                 langs=d[key]["langs"],
                 main_lang=d[key]["main_lang"],
                 is_scraped=d[key]["is_scraped"],
-            ) for key in d.keys()
+            ) for key in d.keys() if key != 'starting_time' and key != 'elapsed_time'
         ]
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
 
@@ -99,7 +96,6 @@ class Crawler:
             os.mkdir(self.working_dir)
 
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
-
             f.write(json.dumps(self.site_map.visited_urls))
 
         logging.info(
@@ -125,7 +121,9 @@ class Crawler:
               save_interval: int,
               load_parallel_docs: bool,
               load_visited_urls: bool,
-              max_number: int):
+              max_number: int) -> None:
+
+        self.starting_time = time()
 
         if load_visited_urls:
             self.load_visited_urls_from_disk()
@@ -137,8 +135,6 @@ class Crawler:
 
         urls_to_visit = list(self.site_map.visited_urls.keys())
         urls_to_visit = [url for url in urls_to_visit if self.site_map.visited_urls[url] is False]
-
-        self.starting_time = time()
 
         for idx, url in enumerate(urls_to_visit):
             self.driver.get(url)
@@ -179,18 +175,20 @@ class Crawler:
                 self.save_visited_urls_to_disk()
                 self.driver.delete_all_cookies()
 
-        logging.info("Finishing crawl and saving.")
-        self.save_visited_urls_to_disk()
-        self.save_parallel_documents_to_disk()
-        if self.elapsed_time == 0:
+        if self.elapsed_time is None:
             self.elapsed_time = time()
         elapsed_time = abs(int(self.elapsed_time - self.starting_time))
-        logging.info(f"Finished crawl in {timedelta(seconds=elapsed_time)}")
+        logging.info(f"Finished crawling in {timedelta(seconds=elapsed_time)}. Saving.")
+        self.starting_time = None
+        self.elapsed_time = None
+        self.save_visited_urls_to_disk()
+        self.save_parallel_documents_to_disk()
+        logging.info("Done.")
 
     def scrape(self,
                save_interval: int,
                rescrape: bool
-               ):
+               ) -> None:
 
         if not os.path.isdir(f"{self.working_dir}/dataframes/"):
             logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
@@ -199,13 +197,15 @@ class Crawler:
         self.driver.delete_all_cookies()
 
         self.load_parallel_documents_from_disk()
+
+        if self.starting_time is None:
+            self.starting_time = time()
+
         if rescrape is True:
             for doc in self.parallel_documents:
                 doc.is_scraped = False
 
         logging.info("Begin scraping docs for parallel texts")
-        self.starting_time = time()
-        self.elapsed_time = 0
 
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
@@ -237,12 +237,15 @@ class Crawler:
         n_unscraped = len([doc for doc in self.parallel_documents if doc.is_scraped is False])
         if n_unscraped != 0:
             logging.warning(f"{n_unscraped} unscraped parallel documents on disk")
-        self.save_parallel_documents_to_disk(suppress_log=True)
 
         if self.elapsed_time == 0:
             self.elapsed_time = time()
         elapsed_time = abs(int(self.elapsed_time - self.starting_time))
-        logging.info(f"Finished scrape in {timedelta(seconds=elapsed_time)}")
+        logging.info(f"Finished scraping in {timedelta(seconds=elapsed_time)}. Saving.")
+        self.starting_time = None
+        self.elapsed_time = None
+        self.save_parallel_documents_to_disk(suppress_log=True)
+        logging.info("Done.")
 
     @staticmethod
     def validate_dataframe(df: pd.DataFrame, langs: List[str]) -> Tuple[bool, str]:
