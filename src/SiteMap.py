@@ -8,12 +8,11 @@ from src.Crawler import logging
 class SiteMap:
 
     def __init__(self,
-                 url: Optional[str],
                  main_language: str = "es",
                  exclude: List[str] = None,
                  visited_urls: dict = None):
-        self.map_url = url
         self.main_language = main_language
+        self.map_url = f"https://www.jw.org/{self.main_language}/sitemap.xml"
         self.visited_urls = {} if visited_urls is None else visited_urls
         if self.visited_urls == {} and self.map_url is not None:
             response = requests.get(self.map_url)

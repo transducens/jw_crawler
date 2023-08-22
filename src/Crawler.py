@@ -50,8 +50,6 @@ class Crawler:
                 "is_scraped": parallel_doc.is_scraped,
                 "uuid": str(parallel_doc.uuid)
             }
-        if not os.path.isdir(self.working_dir):
-            os.mkdir(self.working_dir)
 
         if os.path.exists(f"{self.working_dir}/parallel_documents.json"):
             with open(f"{self.working_dir}/parallel_documents.json") as f:
@@ -94,9 +92,6 @@ class Crawler:
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
 
     def save_visited_urls_to_disk(self) -> None:
-
-        if not os.path.isdir(self.working_dir):
-            os.mkdir(self.working_dir)
 
         with open(f"{self.working_dir}/visited_urls.json", "w") as f:
             f.write(json.dumps(self.site_map.visited_urls))

@@ -31,19 +31,17 @@ parser.add_argument("-s", "--scrape", action='store_true', default=False, help="
                                                                                "and saves them as dataframes")
 
 parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
-parser.add_argument("--site_map_url", help="Sets URL of site map to be downloaded before beginning"
-                                           "crawl operation")
-parser.add_argument("--working_dir", default=".", help="Sets working directory. Default is the same directory as "
-                                                       "script")
-parser.add_argument("--main_language", help="Sets main language, which must correspond to site map language.",
+parser.add_argument("--main_language", help="Sets language for downloading the site map. Default: 'es'",
                     default="es")
+parser.add_argument("--working_dir", help="Sets working directory. Default: main language", default=""),
 parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape", default="es cak kek mam "
                                                                                                       "ctu quc poh tzh "
                                                                                                       "tzo yua")
 parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
-parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls", default=False)
-parser.add_argument("--save_interval", default=50, type=int, help="Sets how often to save parallel docs")
+parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls",
+                    default=False)
+parser.add_argument("--save_interval", default=20, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
 parser.add_argument("--exclude", help="String containing tokens to exclude from site map separated by spaces",
@@ -53,6 +51,12 @@ parser.add_argument("--snap", action='store_true', default=False, help="Include 
 args = parser.parse_args()
 
 if args.crawl is True:
+
+    if args.working_dir == "":
+        args.working_dir = args.main_language
+        if os.path.exists(args.working_dir) is False:
+            os.mkdir(args.working_dir)
+
     if args.load_visited_urls is False:
         assert args.site_map_url is not None, "No site map specified. Either load visited urls file with -v or " \
                                               "specify the url of a site map"
@@ -70,7 +74,8 @@ if args.crawl is True:
         if os.path.exists(f"{args.working_dir}/parallel_documents.json"):
             check_for_existing_save_file(f"{args.working_dir}/parallel_documents.json")
     else:
-        assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"No 'parallel_documents.json' file found."
+        assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"No 'parallel_documents.json' file " \
+                                                                              f"found."
 
     if os.path.exists(args.working_dir) is False:
         os.mkdir(args.working_dir)
@@ -79,7 +84,6 @@ if args.crawl is True:
 
     crawler = Crawler(
         site_map=SiteMap(
-            url=args.site_map_url if args.load_visited_urls is False else None,
             exclude=args.exclude.split(" ") if args.exclude is not None else None,
             main_language=args.main_language,
             visited_urls=visited_urls if args.load_visited_urls is True else None,
