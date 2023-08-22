@@ -6,8 +6,7 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox import webdriver
 from selenium.webdriver.remote.webelement import WebElement
-
-from src.Crawler import logging
+from src.logging_config import logging
 
 
 class ParallelDocument:

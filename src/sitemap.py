@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List
 
 import requests
 from lxml import etree
-from src.Crawler import logging
+from src.logging_config import logging
 
 
 class SiteMap:

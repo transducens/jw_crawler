@@ -11,18 +11,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium import webdriver
-from src.ParallelDocument import ParallelDocument
-from src.SiteMap import SiteMap
 from selenium.webdriver.firefox.service import Service
-
-log_format = (
-    '[%(asctime)s] %(levelname)-8s %(message)s')
-
-logging.basicConfig(
-    level=logging.INFO,
-    format=log_format,
-    filename="crawl.log"
-)
+from src.parallel_document import ParallelDocument
+from src.sitemap import SiteMap
+from src.logging_config import logging
 
 
 class Crawler:
