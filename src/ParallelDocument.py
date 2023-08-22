@@ -3,7 +3,6 @@ from uuid import uuid4
 from time import sleep
 from typing import List, Tuple, Union
 from selenium.common import NoSuchElementException
-from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox import webdriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -41,8 +40,7 @@ class ParallelDocument:
             language_input.clear()
             language_input.send_keys(lang)
             self.wait_for_language_to_load(driver)
-            driver.find_element(By.XPATH, f".//li[@data-value='{lang}']")
-            language_input.send_keys(Keys.ENTER)
+            driver.find_element(By.XPATH, f".//li[@data-value='{lang}']").click()
             self.wait_for_language_to_load(driver)
         except NoSuchElementException:
             logging.warning(f"Language {lang} not found in parallel document {self.url}")
