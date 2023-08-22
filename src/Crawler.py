@@ -2,6 +2,7 @@ import logging
 import json
 import os
 import pandas as pd
+import uuid
 from time import time
 from typing import List, Optional, Tuple
 from datetime import timedelta
@@ -47,7 +48,7 @@ class Crawler:
                 "langs": parallel_doc.langs,
                 "main_lang": parallel_doc.main_lang,
                 "is_scraped": parallel_doc.is_scraped,
-                "uuid": parallel_doc.uuid
+                "uuid": str(parallel_doc.uuid)
             }
         if not os.path.isdir(self.working_dir):
             os.mkdir(self.working_dir)
@@ -87,7 +88,7 @@ class Crawler:
                 langs=d[key]["langs"],
                 main_lang=d[key]["main_lang"],
                 is_scraped=d[key]["is_scraped"],
-                uuid=d[key]["uuid"]
+                uuid=uuid.UUID(d[key].get("uuid")) if d[key].get("uuid") is not None else None 
             ) for key in d.keys() if key != 'starting_time' and key != 'elapsed_time'
         ]
         logging.info(f"Loaded {len(self.parallel_documents)} parallel documents from disk")
