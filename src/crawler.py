@@ -1,4 +1,3 @@
-import logging
 import json
 import os
 import pandas as pd
@@ -177,7 +176,8 @@ class Crawler:
 
     def scrape(self,
                save_interval: int,
-               rescrape: bool
+               rescrape: bool,
+               allow_misalignments: bool,
                ) -> None:
 
         if not os.path.isdir(f"{self.working_dir}/dataframes/"):
@@ -203,7 +203,8 @@ class Crawler:
             doc_name = parallel_document.uuid
             parallel_text_df = parallel_document.get_parallel_texts(self.driver)
 
-            is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs)
+            is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs,
+                                                          allow_misalignments)
             if is_valid is True:
                 parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
                 logging.info(
@@ -238,7 +239,7 @@ class Crawler:
         logging.info("Done.")
 
     @staticmethod
-    def validate_dataframe(df: pd.DataFrame, langs: List[str]) -> Tuple[bool, str]:
+    def validate_dataframe(df: pd.DataFrame, langs: List[str], allow_misalignments: bool = False) -> Tuple[bool, str]:
 
         if df is None:
             return False, "Dataframe is 'None'"
@@ -246,7 +247,7 @@ class Crawler:
         if df.empty:
             return False, "Dataframe is empty."
 
-        if df.isna().values.any():
+        if df.isna().values.any() and allow_misalignments is False:
             return False, "Null values in dataframe."
 
         langs_in_df = [lang for lang in df.columns.values]

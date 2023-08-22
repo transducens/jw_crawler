@@ -2,8 +2,8 @@ import argparse
 import json
 import os
 
-from src.Crawler import Crawler
-from src.SiteMap import SiteMap
+from src.crawler import Crawler
+from src.sitemap import SiteMap
 
 
 def check_for_existing_save_file(save_file: str) -> None:
@@ -44,9 +44,15 @@ parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Load
 parser.add_argument("--save_interval", default=20, type=int, help="Sets how often to save parallel docs")
 parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
-parser.add_argument("--exclude", help="String containing tokens to exclude from site map separated by spaces",
+parser.add_argument("--exclude", help="String containing tokens to exclude from site map separated by spaces. Default:"
+                                      " None",
                     default=None)
 parser.add_argument("--snap", action='store_true', default=False, help="Include if using the Snap version of Firefox")
+parser.add_argument("--allow_misalignments", action='store_true', default=False, help="Gather dataframes from parallel"
+                                                                                      "documents whose paragraphs do "
+                                                                                      "not align exactly across "
+                                                                                      "languages. Reduces precision of "
+                                                                                      "parallel texts. Default: False")
 
 args = parser.parse_args()
 
@@ -100,7 +106,6 @@ if args.crawl is True:
         max_number=args.max_number_parallel_docs,
     )
 
-
 if args.scrape:
     assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"'parallel_documents.json' not found in " \
                                                                           f"working directory {args.working_dir}"
@@ -115,7 +120,8 @@ if args.scrape:
 
     crawler.scrape(
         save_interval=args.save_interval,
-        rescrape=args.rescrape
+        rescrape=args.rescrape,
+        allow_misalignments=args.allow_misalignments
     )
 
 if args.crawl is False and args.scrape is False:
