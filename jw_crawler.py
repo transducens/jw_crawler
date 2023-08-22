@@ -55,13 +55,13 @@ parser.add_argument("--allow_misalignments", action='store_true', default=False,
                                                                                       "parallel texts. Default: False")
 
 args = parser.parse_args()
+if args.working_dir == "":
+    args.working_dir = args.main_language
 
 if args.crawl is True:
 
-    if args.working_dir == "":
-        args.working_dir = args.main_language
-        if os.path.exists(args.working_dir) is False:
-            os.mkdir(args.working_dir)
+    if os.path.exists(args.working_dir) is False:
+        os.mkdir(args.working_dir)
 
     if args.load_visited_urls is False:
         assert args.site_map_url is not None, "No site map specified. Either load visited urls file with -v or " \
@@ -87,7 +87,7 @@ if args.crawl is True:
         os.mkdir(args.working_dir)
 
     print("Crawling in progress. Refer to 'crawl.log' for updates.")
-
+    
     crawler = Crawler(
         site_map=SiteMap(
             exclude=args.exclude.split(" ") if args.exclude is not None else None,
