@@ -256,10 +256,10 @@ class Crawler:
         if df is None:
             return False, "Dataframe is 'None'"
 
-        if df.empty is True:
+        if df.empty:
             return False, "Dataframe is empty."
 
-        if df.isna().values.any() is True:
+        if df.isna().values.any():
             return False, "Null values in dataframe."
 
         langs_in_df = [lang for lang in df.columns.values]
