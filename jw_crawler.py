@@ -4,6 +4,7 @@ import os
 
 from src.crawler import Crawler
 from src.sitemap import SiteMap
+from src.ospl import OneSentencePerLine
 
 
 def check_for_existing_save_file(save_file: str) -> None:
@@ -51,6 +52,9 @@ parser.add_argument("--allow_misalignments", action='store_true', default=False,
                                                                                       "not align exactly across "
                                                                                       "languages. Reduces precision of "
                                                                                       "parallel texts. Default: False")
+parser.add_argument("--create_ospl", action='store_true', default=False, help="Create parallel corpora following the"
+                                                                              "'One Sentence Per Line' format. Default"
+                                                                              ": False")
 
 args = parser.parse_args()
 if args.working_dir == "":
@@ -122,5 +126,16 @@ if args.scrape:
         allow_misalignments=args.allow_misalignments
     )
 
-if args.crawl is False and args.scrape is False:
-    raise RuntimeError("You must select an operation, either --crawl or --scrape.")
+if args.create_ospl:
+    assert os.path.exists(f"{args.working_dir}/dataframes"), f"No 'dataframes' folder in working directory " \
+                                                             f"'{args.working_dir}'"
+    assert os.listdir(f"{args.working_dir}/dataframes") != [], f"'dataframes' folder in working directory " \
+                                                               f"{args.working_dir} is empty."
+    ospl = OneSentencePerLine(working_dir=args.working_dir,
+                              langs=args.languages.split(),
+                              main_lang=args.main_language
+                              )
+    ospl.create_ospl()
+
+if args.crawl is False and args.scrape is False and args.create_ospl is False:
+    raise RuntimeError("You must select an operation, either --crawl, --scrape, or --create_ospl.")
