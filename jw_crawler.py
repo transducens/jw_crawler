@@ -30,13 +30,11 @@ parser.add_argument("-s", "--scrape", action='store_true', default=False, help="
                                                                                "parallel text from parallel documents"
                                                                                "and saves them as dataframes")
 
-parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
-parser.add_argument("--main_language", help="Sets language for downloading the site map. Default: 'es'",
-                    default="es")
 parser.add_argument("--working_dir", help="Sets working directory. Default: main language", default=""),
-parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape", default="es cak kek mam "
-                                                                                                      "ctu quc poh tzh "
-                                                                                                      "tzo yua")
+parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
+parser.add_argument("--main_language", required=True, help="Sets language for downloading the site map. Default: 'es'",
+                    default="es")
+parser.add_argument("--languages", required=True, help="Sets languages to look for during crawl and scrape")
 parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
 parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls",

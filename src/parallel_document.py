@@ -11,7 +11,7 @@ from src.logging_config import logging
 
 class ParallelDocument:
 
-    def __init__(self, url: str, langs: List[str], main_lang: str = "es", is_scraped: bool = False, uuid: uuid4 = None):
+    def __init__(self, url: str, langs: List[str], main_lang: str, is_scraped: bool = False, uuid: uuid4 = None):
         self.url = url
         self.langs = langs
         self.main_lang = main_lang

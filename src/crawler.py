@@ -129,7 +129,7 @@ class Crawler:
             self.driver.get(url)
             logging.info(f"Crawling {url}")
             langs = []
-            for language in self.langs:
+            for language in self.langs + [self.site_map.main_language]:
                 try:
                     language_input = self.driver.find_element(By.XPATH, ".//input[@id='otherAvailLangsChooser']")
                     language_input.clear()
@@ -147,7 +147,8 @@ class Crawler:
                 self.parallel_documents.append(
                     ParallelDocument(
                         url=url,
-                        langs=langs
+                        langs=langs,
+                        main_lang=self.site_map.main_language
                     )
                 )
                 logging.info(f"Added parallel document: {str(langs)}")
@@ -208,7 +209,7 @@ class Crawler:
             if is_valid is True:
                 parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
                 logging.info(
-                    f"New dataframe from {parallel_document.url}: "
+                    f"New dataframe from {parallel_document.url} "
                     f"{parallel_document.langs}."
                 )
                 parallel_document.is_scraped = True
