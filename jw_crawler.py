@@ -21,7 +21,7 @@ def check_for_existing_save_file(save_file: str) -> None:
 
 parser = argparse.ArgumentParser(
     prog="jw_crawler",
-    description="Crawl the website jw.org for Mayan languages",
+    description="Crawl the website jw.org for parallel corpora",
     epilog="Inspired by the tireless efforts of the JW300 team"
 )
 
@@ -71,8 +71,6 @@ if args.crawl is True:
         os.mkdir(args.working_dir)
 
     if args.load_visited_urls is False:
-        assert args.site_map_url is not None, "No site map specified. Either load visited urls file with -v or " \
-                                              "specify the url of a site map"
         if os.path.exists(f"{args.working_dir}/visited_urls.json"):
             check_for_existing_save_file(f"{args.working_dir}/visited_urls.json")
     else:
@@ -97,8 +95,8 @@ if args.crawl is True:
     
     crawler = Crawler(
         site_map=SiteMap(
-            exclude=args.exclude.split(" ") if args.exclude is not None else None,
             main_language=args.main_language,
+            exclude=args.exclude.split(" ") if args.exclude is not None else None,
             visited_urls=visited_urls if args.load_visited_urls is True else None,
         ),
         working_dir=args.working_dir,
@@ -132,10 +130,15 @@ if args.scrape:
     )
 
 if args.create_ospl:
+    assert args.main_language is not None, f"No main language specified. Use --main_language followed by "\
+                                           f"the ISO language code."
+    assert args.languages is not None, f"No list of languages specified. Use a blank-separated list of ISO "\
+                                       f"language codes."
     assert os.path.exists(f"{args.working_dir}/dataframes"), f"No 'dataframes' folder in working directory " \
                                                              f"'{args.working_dir}'"
     assert os.listdir(f"{args.working_dir}/dataframes") != [], f"'dataframes' folder in working directory " \
                                                                f"{args.working_dir} is empty."
+
     ospl = OneSentencePerLine(working_dir=args.working_dir,
                               langs=args.languages.split(),
                               main_lang=args.main_language
