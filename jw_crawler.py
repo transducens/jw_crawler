@@ -33,9 +33,8 @@ parser.add_argument("-s", "--scrape", action='store_true', default=False, help="
 
 parser.add_argument("--working_dir", help="Sets working directory. Default: main language", default=""),
 parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
-parser.add_argument("--main_language", required=True, help="Sets language for downloading the site map. Default: 'es'",
-                    default="es")
-parser.add_argument("--languages", required=True, help="Sets languages to look for during crawl and scrape")
+parser.add_argument("--main_language", help="Sets language for downloading the site map.")
+parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape")
 parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
 parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls",
@@ -61,6 +60,12 @@ if args.working_dir == "":
     args.working_dir = args.main_language
 
 if args.crawl is True:
+
+    assert args.main_language is not None, f"No main language specified. Use --main_language followed by the ISO " \
+                                           f"language code"
+
+    assert args.languages is not None, f"No list of languages specified. Use blank-separated string of ISO language " \
+                                       f"codes"
 
     if os.path.exists(args.working_dir) is False:
         os.mkdir(args.working_dir)
