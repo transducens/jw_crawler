@@ -120,7 +120,7 @@ if args.scrape:
         site_map=None,
         working_dir=args.working_dir,
         snap=args.snap,
-        langs=args.languages.split(),
+        langs=args.languages.split() if args.languages is not None else None,
     )
 
     crawler.scrape(
