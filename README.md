@@ -68,7 +68,12 @@ Scrape a list of URLs specified in the `es/parallel_documents.json` file.
 $ python jw_crawler.py --scrape --working_dir es
 ```
 
-Create parallel text files for Spanish, Mam, and Yucatec Mayan following the One Sentence Per Line format:
+Create parallel text files for Spanish following the One Sentence Per Line format:
+```bash
+$ python $jw_crawler.py --create_ospl --main_language es
+```
+
+Same as above for only for target languages Mam and Yucatec Mayan:
 ```bash
 $ python $jw_crawler.py --create_ospl --main_language es --languages "mam yua"
 ```
