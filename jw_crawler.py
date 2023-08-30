@@ -132,15 +132,13 @@ if args.scrape:
 if args.create_ospl:
     assert args.main_language is not None, f"No main language specified. Use --main_language followed by "\
                                            f"the ISO language code."
-    assert args.languages is not None, f"No list of languages specified. Use a blank-separated list of ISO "\
-                                       f"language codes."
     assert os.path.exists(f"{args.working_dir}/dataframes"), f"No 'dataframes' folder in working directory " \
                                                              f"'{args.working_dir}'"
     assert os.listdir(f"{args.working_dir}/dataframes") != [], f"'dataframes' folder in working directory " \
                                                                f"{args.working_dir} is empty."
 
     ospl = OneSentencePerLine(working_dir=args.working_dir,
-                              langs=args.languages.split(),
+                              langs=args.languages.split() if args.languages is not None else None,
                               main_lang=args.main_language
                               )
     ospl.create_ospl()
