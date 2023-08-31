@@ -110,7 +110,9 @@ class Crawler:
               save_interval: int,
               load_parallel_docs: bool,
               load_visited_urls: bool,
-              max_number: int) -> None:
+              max_number: int,
+              scrape: bool,
+              no_misalignments: bool) -> None:
 
         self.starting_time = time()
 
@@ -151,6 +153,8 @@ class Crawler:
                         main_lang=self.site_map.main_language
                     )
                 )
+                if scrape is True:
+                    self.scrape_doc(self.parallel_documents[-1], no_misalignments)
                 logging.info(f"Added parallel document: {str(langs)}")
                 if max_number != 0 and len(self.parallel_documents) >= max_number:
                     logging.info(f"Reached max number of documents to gather: {max_number}. Stopping crawl.")
@@ -175,15 +179,28 @@ class Crawler:
         self.save_parallel_documents_to_disk()
         logging.info("Done.")
 
+    def scrape_doc(self, parallel_document: ParallelDocument, no_misalignments: bool):
+        doc_name = parallel_document.uuid
+        parallel_text_df = parallel_document.get_parallel_texts(self.driver)
+
+        is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs,
+                                                      no_misalignments)
+        if is_valid is True:
+            parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
+            logging.info(
+                f"New dataframe from {parallel_document.url} "
+                f"{parallel_document.langs}."
+            )
+            parallel_document.is_scraped = True
+        else:
+            logging.warning(f"Failed to scrape parallel document at {parallel_document.url}: {valid_msg}")
+            parallel_document.is_scraped = False
+
     def scrape(self,
                save_interval: int,
                rescrape: bool,
-               allow_misalignments: bool,
+               no_misalignments: bool,
                ) -> None:
-
-        if not os.path.isdir(f"{self.working_dir}/dataframes/"):
-            logging.info(f"Creating directory to save dataframes at {self.working_dir}/dataframes/")
-            os.mkdir(f"{self.working_dir}/dataframes/")
 
         self.driver.delete_all_cookies()
 
@@ -201,21 +218,7 @@ class Crawler:
         parallel_documents_to_scrape = [doc for doc in self.parallel_documents if doc.is_scraped is False]
         for idx, parallel_document in enumerate(parallel_documents_to_scrape):
 
-            doc_name = parallel_document.uuid
-            parallel_text_df = parallel_document.get_parallel_texts(self.driver)
-
-            is_valid, valid_msg = self.validate_dataframe(parallel_text_df, parallel_document.langs,
-                                                          allow_misalignments)
-            if is_valid is True:
-                parallel_text_df.to_csv(f"{self.working_dir}/dataframes/{doc_name}.tsv", sep="\t")
-                logging.info(
-                    f"New dataframe from {parallel_document.url} "
-                    f"{parallel_document.langs}."
-                )
-                parallel_document.is_scraped = True
-            else:
-                logging.warning(f"Failed to scrape parallel document at {parallel_document.url}: {valid_msg}")
-                parallel_document.is_scraped = False
+            self.scrape_doc(parallel_document, no_misalignments)
 
             if idx % save_interval == 0 and idx != 0:
                 n_docs_scraped = len([doc for doc in self.parallel_documents if doc.is_scraped is True])
@@ -240,7 +243,7 @@ class Crawler:
         logging.info("Done.")
 
     @staticmethod
-    def validate_dataframe(df: pd.DataFrame, langs: List[str], allow_misalignments: bool = False) -> Tuple[bool, str]:
+    def validate_dataframe(df: pd.DataFrame, langs: List[str], no_misalignments: bool = False) -> Tuple[bool, str]:
 
         if df is None:
             return False, "Dataframe is 'None'"
@@ -248,7 +251,7 @@ class Crawler:
         if df.empty:
             return False, "Dataframe is empty."
 
-        if df.isna().values.any() and allow_misalignments is False:
+        if df.isna().values.any() and no_misalignments is False:
             return False, "Null values in dataframe."
 
         langs_in_df = [lang for lang in df.columns.values]

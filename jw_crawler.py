@@ -30,7 +30,9 @@ parser.add_argument("-c", "--crawl", action='store_true', default=False, help="R
 parser.add_argument("-s", "--scrape", action='store_true', default=False, help="Runs scrape operation, which extracts"
                                                                                "parallel text from parallel documents"
                                                                                "and saves them as dataframes")
-
+parser.add_argument("--scrape_docs", "-S", action='store_true', default=False, help="Scrape parallel documents found in "
+                                                                              "'parallel_documents.json' file in"
+                                                                              "working directory.")
 parser.add_argument("--working_dir", help="Sets working directory. Default: main language", default=""),
 parser.add_argument("--rescrape", action='store_true', default=False, help="Rescrape all parallel documents on disk")
 parser.add_argument("--main_language", help="Sets language for downloading the site map.")
@@ -70,9 +72,14 @@ if args.crawl is True:
     if os.path.exists(args.working_dir) is False:
         os.mkdir(args.working_dir)
 
+    if args.scrape is True:
+        if os.path.exists(f"{args.working_dir}/dataframes"):
+            check_for_existing_file_or_dir(f"{args.working_dir}/dataframes")
+        os.mkdir(f"{args.working_dir}/dataframes")
+
     if args.load_visited_urls is False:
         if os.path.exists(f"{args.working_dir}/visited_urls.json"):
-            check_for_existing_save_file(f"{args.working_dir}/visited_urls.json")
+            check_for_existing_file_or_dir(f"{args.working_dir}/visited_urls.json")
     else:
         try:
             with open(f"{args.working_dir}/visited_urls.json") as f:
@@ -83,7 +90,7 @@ if args.crawl is True:
 
     if args.load_parallel_docs is False:
         if os.path.exists(f"{args.working_dir}/parallel_documents.json"):
-            check_for_existing_save_file(f"{args.working_dir}/parallel_documents.json")
+            check_for_existing_file_or_dir(f"{args.working_dir}/parallel_documents.json")
     else:
         assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"No 'parallel_documents.json' file " \
                                                                               f"found."
@@ -109,6 +116,8 @@ if args.crawl is True:
         load_parallel_docs=args.load_parallel_docs,
         load_visited_urls=args.load_visited_urls,
         max_number=args.max_number_parallel_docs,
+        scrape=args.scrape,
+        no_misalignments=args.no_misalignments
     )
 
 if args.scrape:
