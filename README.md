@@ -20,11 +20,15 @@ Crawl the website jw.org for parallel corpora
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c, --crawl           Runs crawl operation, which gathers parallel documents from JW.org
-  -s, --scrape          Runs scrape operation, which extractsparallel text from parallel documentsand saves them as dataframes
+  -c, --crawl           Runs crawl operation, which gathers parallel documents
+                        from JW.org
+  -s, --scrape          Runs scrape operation, which extractsparallel text
+                        from parallel documentsand saves them as dataframes
+  --scrape_docs, -S     Scrape parallel documents found in
+                        'parallel_documents.json' file inworking directory.
   --working_dir WORKING_DIR
                         Sets working directory. Default: main language
-  --rescrape            Rescrape all parallel documents on disk
+  --rescrape, -R        Rescrape all parallel documents on disk
   --main_language MAIN_LANGUAGE
                         Sets language for downloading the site map.
   --languages LANGUAGES
@@ -37,25 +41,29 @@ optional arguments:
                         Sets how often to save parallel docs
   --max_number_parallel_docs MAX_NUMBER_PARALLEL_DOCS
                         Sets max number of parallel docs to gather
-  --exclude EXCLUDE     String containing tokens to exclude from site map separated by spaces. Default: None
-  --snap                Include if using the Snap version of Firefox
-  --allow_misalignments
-                        Gather dataframes from paralleldocuments whose paragraphs do not align exactly across languages. Reduces precision of parallel texts. Default: False
-  --create_ospl         Create parallel corpora following the'One Sentence Per Line' format. Default: False
+  --exclude EXCLUDE     String containing tokens to exclude from site map
+                        separated by spaces. Default: None
+  --snap, -n            Include if using the Snap version of Firefox
+  --no_misalignments, -m
+                        Gather dataframes from paralleldocuments whose
+                        paragraphs do not align exactly across languages.
+                        Reduces precision of parallel texts. Default: False
+  --create_ospl, -o     Create parallel corpora following the'One Sentence Per
+                        Line' format. Default: False
 
 Inspired by the tireless efforts of the JW300 team
 ```
 
 ## Examples of use
 
-Crawl the Spanish version of the website looking for the Mayan languages k'iche', mam, and tzeltal:
+Crawl and scrape the Spanish version of the website looking for the Mayan languages k'iche', mam, and tzeltal:
 ```bash
-$ python jw_crawler.py --crawl --main_language es --languages "quc mam tzh"
+$ python jw_crawler.py --crawl --scrape --main_language es --languages "quc mam tzh"
 ``` 
 
 Same as above, excluding the New World Translation Bible and the terms of use:
 ```bash
-$ python jw_crawler.py --crawl --main_language es --languages "quc mam tzh" --exclude "biblia/nwt/libros condiciones-de-uso"
+$ python jw_crawler.py --crawl --scrape --main_language es --languages "quc mam tzh" --exclude "biblia/nwt/libros condiciones-de-uso"
 ``` 
 
 Reload an interrupted crawl session:
@@ -65,7 +73,7 @@ $ python jw_crawler.py --crawl --load_parallel_docs --load_visited_urls --main_l
 
 Scrape a list of URLs specified in the `es/parallel_documents.json` file.
 ```bash
-$ python jw_crawler.py --scrape --working_dir es
+$ python jw_crawler.py --scrape_docs --working_dir es
 ```
 
 Create parallel text files for Spanish following the One Sentence Per Line format:
