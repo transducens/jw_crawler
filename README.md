@@ -1,5 +1,4 @@
 # JW Crawler
-_Debido a la intransigencia de los Testigos de Jehová, nos vemos obligados a implementar [nuestro propio](https://gitlab.com/Feasinde/jw_crawler) *crawler* para extraer los invaluables *corpora* paralelos de [JW.org](https://www.jw.org/es/)._
 
 `jw_crawler.py` is a webcrawler using [Selenium](https://www.selenium.dev/) and Firefox via the [geckodriver](https://github.com/mozilla/geckodriver) that retrieves parallel text from the official Jehova's Witnesses' website, [jw.org](https://www.jw.org).
 
