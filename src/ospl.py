@@ -32,13 +32,20 @@ class OneSentencePerLine:
             df = pd.read_csv(f"{self.working_dir}/dataframes/{df_file}", sep="\t", index_col=0)
             for lang in [lang for lang in df.columns if lang != self.main_lang]:
 
+                ls_lang = list(df[lang])
+                ls_lang = [str(w).replace('\n', " ") for w in ls_lang]
+                ls_main_lang = list(df[self.main_lang])
+                ls_main_lang = [str(w).replace('\n', " ") for w in ls_main_lang]
+                assert len(ls_lang) == len(ls_main_lang), f"ERROR: Dataframe '{df_file}' contains mismatch length"
+                assert "" not in ls_lang, f"ERROR: Blank entry in dataframe '{df_file}'"
+                assert "" not in ls_main_lang, f"ERROR: Blank entry in dataframe '{df_file}'"
+
+                if not os.path.exists(f"{self.working_dir}/text_{self.main_lang}/{self.main_lang}_{lang}"):
+                    os.mkdir(f"{self.working_dir}/text_{self.main_lang}/{self.main_lang}_{lang}")
+
                 with open(f"{self.working_dir}/text_{self.main_lang}/{self.main_lang}_{lang}/data.{self.main_lang}",
                           "a") as f:
-                    for p in df[self.main_lang]:
-                        paragraph = p.strip()  if type(p) == str else p
-                        f.write(str(paragraph) + "\n")
+                    f.writelines(p + '\n' for p in ls_main_lang)
 
                 with open(f"{self.working_dir}/text_{self.main_lang}/{self.main_lang}_{lang}/data.{lang}", "a") as f:
-                    for p in df[lang]:
-                        paragraph = p.strip()  if type(p) == str else p
-                        f.write(str(paragraph) + "\n")
+                    f.writelines(p + '\n' for p in ls_lang)
