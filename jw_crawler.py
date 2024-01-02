@@ -34,36 +34,39 @@ parser.add_argument("-c", "--crawl", action='store_true', default=False, help="R
 parser.add_argument("-s", "--scrape", action='store_true', default=False, help="Runs scrape operation, which extracts"
                                                                                "parallel text from parallel documents"
                                                                                "and saves them as dataframes")
-parser.add_argument("--scrape_docs", "-S", action='store_true', default=False, help="Scrape parallel documents found in "
+parser.add_argument("--scrape-docs", "-S", action='store_true', default=False, help="Scrape parallel documents found in "
                                                                               "'parallel_documents.json' file in"
                                                                               "working directory.")
-parser.add_argument("--working_dir", help="Sets working directory. Default: main language", default=""),
+parser.add_argument("--working-dir", help="Sets working directory. Default: main language", default=""),
 parser.add_argument("--rescrape", "-R", action='store_true', default=False, help="Rescrape all parallel documents on disk")
-parser.add_argument("--main_language", help="Sets language for downloading the site map.")
+parser.add_argument("--main-language", help="Sets language for downloading the site map. Default: en", default="en")
 parser.add_argument("--languages", help="Sets languages to look for during crawl and scrape")
-parser.add_argument("-p", "--load_parallel_docs", action='store_true', help="Loads saved list of parallel docs.",
+parser.add_argument("-p", "--load-parallel-docs", action='store_true', help="Loads saved list of parallel docs.",
                     default=False)
-parser.add_argument("-v", "--load_visited_urls", action='store_true', help="Loads saved list of visited urls",
+parser.add_argument("-v", "--load-visited-urls", action='store_true', help="Loads saved list of visited urls",
                     default=False)
-parser.add_argument("--save_interval", default=20, type=int, help="Sets how often to save parallel docs")
-parser.add_argument("--max_number_parallel_docs", default=0, type=int, help="Sets max number of parallel docs to "
+parser.add_argument("--save-interval", default=20, type=int, help="Sets how often to save parallel docs")
+parser.add_argument("-n", "--max-number-parallel-docs", default=0, type=int, help="Sets max number of parallel docs to "
                                                                             "gather")
 parser.add_argument("--exclude", help="String containing tokens to exclude from site map separated by spaces. Default:"
                                       " None",
                     default=None)
-parser.add_argument("--snap", "-n", action='store_true', default=False, help="Include if using the Snap version of Firefox")
-parser.add_argument("--no_misalignments", "-m", action='store_true', default=False, help="Gather dataframes from parallel"
+parser.add_argument("--snap", action='store_true', default=False, help="Include if using the Snap version of Firefox")
+parser.add_argument("--allow-misalignments", "-m", action='store_true', default=False, help="Gather dataframes from parallel"
                                                                                       "documents whose paragraphs do "
                                                                                       "not align exactly across "
                                                                                       "languages. Reduces precision of "
                                                                                       "parallel texts. Default: False")
-parser.add_argument("--create_ospl", "-o", action='store_true', default=False, help="Create parallel corpora following the"
+parser.add_argument("--create-ospl", "-o", action='store_true', default=False, help="Experimental. Create parallel corpora following the"
                                                                               "'One Sentence Per Line' format. Default"
                                                                               ": False")
 
 args = parser.parse_args()
 if args.working_dir == "":
     args.working_dir = args.main_language
+
+if args.rescrape:
+    args.scrape_docs = True
 
 if args.crawl is True:
 
@@ -121,17 +124,18 @@ if args.crawl is True:
         load_visited_urls=args.load_visited_urls,
         max_number=args.max_number_parallel_docs,
         scrape=args.scrape,
-        no_misalignments=args.no_misalignments
+        allow_misalignments=args.allow_misalignments
     )
 
 if args.scrape_docs:
     assert args.working_dir is not None, "No working directory specified"
     assert os.path.exists(f"{args.working_dir}/parallel_documents.json"), f"'parallel_documents.json' not found in " \
                                                                           f"working directory {args.working_dir}"
-    with open(f"{args.working_dir}/parallel_documents.json") as f:
-        scraped_docs = json.loads(f.read())
-        scraped_docs = [scraped_docs[key]['is_scraped'] for key in scraped_docs.keys() if "time" not in key]
-        assert False in scraped_docs, "No unscraped parallel docs in 'parallel_documents.json'"
+    if not args.rescrape:
+        with open(f"{args.working_dir}/parallel_documents.json") as f:
+            scraped_docs = json.loads(f.read())
+            scraped_docs = [scraped_docs[key]['is_scraped'] for key in scraped_docs.keys() if "time" not in key]
+            assert False in scraped_docs, "No unscraped parallel docs in 'parallel_documents.json'"
 
     if os.path.exists(f"{args.working_dir}/dataframes"):
         check_for_existing_file_or_dir(f"{args.working_dir}/dataframes")
@@ -149,7 +153,7 @@ if args.scrape_docs:
     crawler.scrape(
         save_interval=args.save_interval,
         rescrape=args.rescrape,
-        no_misalignments=args.no_misalignments
+        allow_misalignments=args.allow_misalignments
     )
 
 if args.create_ospl:
