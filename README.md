@@ -19,68 +19,71 @@ Crawl the website jw.org for parallel corpora
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c, --crawl           Runs crawl operation, which gathers parallel documents
-                        from JW.org
-  -s, --scrape          Runs scrape operation, which extractsparallel text
-                        from parallel documentsand saves them as dataframes
-  --scrape_docs, -S     Scrape parallel documents found in
-                        'parallel_documents.json' file inworking directory.
-  --working_dir WORKING_DIR
+  -c, --crawl           Runs crawl operation, which gathers parallel documents from JW.org
+  -s, --scrape          Runs scrape operation, which extracts parallel text from parallel documentsand saves them as dataframes
+  --scrape-docs, -S     Scrape parallel documents found in 'parallel_documents.json' file inworking directory.
+  --working-dir WORKING_DIR
                         Sets working directory. Default: main language
   --rescrape, -R        Rescrape all parallel documents on disk
-  --main_language MAIN_LANGUAGE
-                        Sets language for downloading the site map.
+  --main-language MAIN_LANGUAGE
+                        Sets language for downloading the site map. Default: en
   --languages LANGUAGES
                         Sets languages to look for during crawl and scrape
-  -p, --load_parallel_docs
+  -p, --load-parallel-docs
                         Loads saved list of parallel docs.
-  -v, --load_visited_urls
+  -v, --load-visited-urls
                         Loads saved list of visited urls
-  --save_interval SAVE_INTERVAL
+  --save-interval SAVE_INTERVAL
                         Sets how often to save parallel docs
-  --max_number_parallel_docs MAX_NUMBER_PARALLEL_DOCS
+  -n MAX_NUMBER_PARALLEL_DOCS, --max-number-parallel-docs MAX_NUMBER_PARALLEL_DOCS
                         Sets max number of parallel docs to gather
-  --exclude EXCLUDE     String containing tokens to exclude from site map
-                        separated by spaces. Default: None
-  --snap, -n            Include if using the Snap version of Firefox
-  --no_misalignments, -m
-                        Gather dataframes from paralleldocuments whose
-                        paragraphs do not align exactly across languages.
-                        Reduces precision of parallel texts. Default: False
-  --create_ospl, -o     Create parallel corpora following the'One Sentence Per
-                        Line' format. Default: False
+  --exclude EXCLUDE     String containing tokens to exclude from site map separated by spaces. Default: None
+  --snap                Include if using the Snap version of Firefox
+  --allow-misalignments, -m
+                        Gather dataframes from paralleldocuments whose paragraphs do not align exactly across languages. Reduces precision of parallel texts. Default: False
+  --create-ospl, -o     Experimental. Create parallel corpora following the'One Sentence Per Line' format. Default: False
+
 
 Inspired by the tireless efforts of the JW300 team
 ```
 
 ## Examples of use
 
+Crawl and scrape the website for French and German documents using the default English-language site map
+```bash
+$ python jw_crawler.py --crawl --scrape --languages "fr de"
+```
+alternatively
+```bash
+$ python jw_crawler.py -cs --languages "fr de"
+```
+
 Crawl and scrape the Spanish version of the website looking for the Mayan languages k'iche', mam, and tzeltal:
 ```bash
-$ python jw_crawler.py --crawl --scrape --main_language es --languages "quc mam tzh"
+$ python jw_crawler.py -cs --main-language es --languages "quc mam tzh"
 ``` 
 
 Same as above, excluding the New World Translation Bible and the terms of use:
 ```bash
-$ python jw_crawler.py --crawl --scrape --main_language es --languages "quc mam tzh" --exclude "biblia/nwt/libros condiciones-de-uso"
+$ python jw-crawler.py -cs --main-language es --languages "quc mam tzh" --exclude "biblia/nwt/libros condiciones-de-uso"
 ``` 
 
 Reload an interrupted crawl session:
 ```bash
-$ python jw_crawler.py --crawl --load_parallel_docs --load_visited_urls --main_language es --languages "quc mam tzh"
+$ python jw-crawler.py --crawl --load-parallel-docs --load-visited-urls --main-language es --languages "quc mam tzh"
 ```
 
 Scrape a list of URLs specified in the `es/parallel_documents.json` file.
 ```bash
-$ python jw_crawler.py --scrape_docs --working_dir es
+$ python jw_crawler.py --scrape-docs --working-dir es
 ```
 
 Create parallel text files for Spanish following the One Sentence Per Line format:
 ```bash
-$ python $jw_crawler.py --create_ospl --main_language es
+$ python $jw_crawler.py --create-ospl --main-language es
 ```
 
 Same as above for only for target languages Mam and Yucatec Mayan:
 ```bash
-$ python $jw_crawler.py --create_ospl --main_language es --languages "mam yua"
+$ python $jw_crawler.py --create-ospl --main-language es --languages "mam yua"
 ```
