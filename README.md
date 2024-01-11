@@ -87,3 +87,6 @@ Same as above for only for target languages Mam and Yucatec Mayan:
 ```bash
 $ python $jw_crawler.py --create-ospl --main-language es --languages "mam yua"
 ```
+
+# License
+This software is released under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.html).
